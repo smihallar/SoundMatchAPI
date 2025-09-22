@@ -3,11 +3,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SoundMatchAPI.Models
 {
-    public class User
+    public class User : IdentityUser
     {
-        public string UserId { get; set; } = Guid.NewGuid().ToString();
-        public string Email { get; set; } = string.Empty;
-        public string UserName { get; set; } = string.Empty;
+        public User()
+        {
+            Id = Guid.NewGuid().ToString();
+        }
         public string SpotifyUserId { get; set; } = string.Empty;
         public string CountryCode { get; set; } = string.Empty; // ex. "US", "GB"
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

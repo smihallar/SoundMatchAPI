@@ -23,6 +23,10 @@ namespace SoundMatchAPI
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.AddIdentityCore<IdentityUser>()
+                            .AddRoles<IdentityRole>()
+                            .AddEntityFrameworkStores<ApplicationDbContext>();  
+
             var app = builder.Build();
 
             app.UseCors("AllowAll");
