@@ -24,17 +24,32 @@ namespace SoundMatchAPI.Migrations
 
             modelBuilder.Entity("ArtistGenre", b =>
                 {
-                    b.Property<int>("ArtistsArtistId")
+                    b.Property<int>("ArtistId")
                         .HasColumnType("int");
 
                     b.Property<int>("GenresGenreId")
                         .HasColumnType("int");
 
-                    b.HasKey("ArtistsArtistId", "GenresGenreId");
+                    b.HasKey("ArtistId", "GenresGenreId");
 
                     b.HasIndex("GenresGenreId");
 
                     b.ToTable("ArtistGenre");
+                });
+
+            modelBuilder.Entity("ArtistMatch", b =>
+                {
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("MutualArtistsArtistId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MatchId", "MutualArtistsArtistId");
+
+                    b.HasIndex("MutualArtistsArtistId");
+
+                    b.ToTable("ArtistMatch");
                 });
 
             modelBuilder.Entity("ArtistSong", b =>
@@ -42,12 +57,12 @@ namespace SoundMatchAPI.Migrations
                     b.Property<int>("ArtistsArtistId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SongsSongId")
+                    b.Property<int>("SongId")
                         .HasColumnType("int");
 
-                    b.HasKey("ArtistsArtistId", "SongsSongId");
+                    b.HasKey("ArtistsArtistId", "SongId");
 
-                    b.HasIndex("SongsSongId");
+                    b.HasIndex("SongId");
 
                     b.ToTable("ArtistSong");
                 });
@@ -67,6 +82,21 @@ namespace SoundMatchAPI.Migrations
                     b.ToTable("ArtistUser");
                 });
 
+            modelBuilder.Entity("GenreMatch", b =>
+                {
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("MutualGenresGenreId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MatchId", "MutualGenresGenreId");
+
+                    b.HasIndex("MutualGenresGenreId");
+
+                    b.ToTable("GenreMatch");
+                });
+
             modelBuilder.Entity("GenreUser", b =>
                 {
                     b.Property<int>("FavoriteGenresGenreId")
@@ -80,6 +110,21 @@ namespace SoundMatchAPI.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("GenreUser");
+                });
+
+            modelBuilder.Entity("MatchSong", b =>
+                {
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("MutualSongsSongId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MatchId", "MutualSongsSongId");
+
+                    b.HasIndex("MutualSongsSongId");
+
+                    b.ToTable("MatchSong");
                 });
 
             modelBuilder.Entity("SongUser", b =>
@@ -109,16 +154,11 @@ namespace SoundMatchAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("MatchId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ArtistId");
-
-                    b.HasIndex("MatchId");
 
                     b.ToTable("Artists");
                 });
@@ -131,16 +171,11 @@ namespace SoundMatchAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GenreId"));
 
-                    b.Property<Guid?>("MatchId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("GenreId");
-
-                    b.HasIndex("MatchId");
 
                     b.ToTable("Genres");
                 });
@@ -186,16 +221,11 @@ namespace SoundMatchAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("MatchId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SongId");
-
-                    b.HasIndex("MatchId");
 
                     b.ToTable("Songs");
                 });
@@ -237,13 +267,28 @@ namespace SoundMatchAPI.Migrations
                 {
                     b.HasOne("SoundMatchAPI.Models.Artist", null)
                         .WithMany()
-                        .HasForeignKey("ArtistsArtistId")
+                        .HasForeignKey("ArtistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SoundMatchAPI.Models.Genre", null)
                         .WithMany()
                         .HasForeignKey("GenresGenreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArtistMatch", b =>
+                {
+                    b.HasOne("SoundMatchAPI.Models.Match", null)
+                        .WithMany()
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SoundMatchAPI.Models.Artist", null)
+                        .WithMany()
+                        .HasForeignKey("MutualArtistsArtistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -258,7 +303,7 @@ namespace SoundMatchAPI.Migrations
 
                     b.HasOne("SoundMatchAPI.Models.Song", null)
                         .WithMany()
-                        .HasForeignKey("SongsSongId")
+                        .HasForeignKey("SongId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -278,6 +323,21 @@ namespace SoundMatchAPI.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GenreMatch", b =>
+                {
+                    b.HasOne("SoundMatchAPI.Models.Match", null)
+                        .WithMany()
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SoundMatchAPI.Models.Genre", null)
+                        .WithMany()
+                        .HasForeignKey("MutualGenresGenreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GenreUser", b =>
                 {
                     b.HasOne("SoundMatchAPI.Models.Genre", null)
@@ -289,6 +349,21 @@ namespace SoundMatchAPI.Migrations
                     b.HasOne("SoundMatchAPI.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MatchSong", b =>
+                {
+                    b.HasOne("SoundMatchAPI.Models.Match", null)
+                        .WithMany()
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SoundMatchAPI.Models.Song", null)
+                        .WithMany()
+                        .HasForeignKey("MutualSongsSongId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -308,20 +383,6 @@ namespace SoundMatchAPI.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SoundMatchAPI.Models.Artist", b =>
-                {
-                    b.HasOne("SoundMatchAPI.Models.Match", null)
-                        .WithMany("MutualArtists")
-                        .HasForeignKey("MatchId");
-                });
-
-            modelBuilder.Entity("SoundMatchAPI.Models.Genre", b =>
-                {
-                    b.HasOne("SoundMatchAPI.Models.Match", null)
-                        .WithMany("MutualGenres")
-                        .HasForeignKey("MatchId");
-                });
-
             modelBuilder.Entity("SoundMatchAPI.Models.Match", b =>
                 {
                     b.HasOne("SoundMatchAPI.Models.User", "InitiatorUser")
@@ -339,22 +400,6 @@ namespace SoundMatchAPI.Migrations
                     b.Navigation("InitiatorUser");
 
                     b.Navigation("RecipientUser");
-                });
-
-            modelBuilder.Entity("SoundMatchAPI.Models.Song", b =>
-                {
-                    b.HasOne("SoundMatchAPI.Models.Match", null)
-                        .WithMany("MutualSongs")
-                        .HasForeignKey("MatchId");
-                });
-
-            modelBuilder.Entity("SoundMatchAPI.Models.Match", b =>
-                {
-                    b.Navigation("MutualArtists");
-
-                    b.Navigation("MutualGenres");
-
-                    b.Navigation("MutualSongs");
                 });
 
             modelBuilder.Entity("SoundMatchAPI.Models.User", b =>
