@@ -8,7 +8,6 @@
 
         // Navigation property
         public List<Genre> Genres { get; set; } = new List<Genre>();
-        public List<Song> Songs { get; set; } = new List<Song>();
 
     }
 }

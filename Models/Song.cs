@@ -7,6 +7,6 @@
         public string AlbumImageUrl { get; set; } = string.Empty;
 
         // Navigation properties
-        public List<Artist> Artists { get; set; }
+        public List<Artist>? Artists { get; set; }
     }
 }

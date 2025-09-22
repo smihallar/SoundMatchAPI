@@ -32,25 +32,37 @@ namespace SoundMatchAPI.Data
                 .HasForeignKey(m => m.RecipientUserId)
                 .OnDelete(DeleteBehavior.NoAction); // To prevent cascading delete cycles
 
+            modelBuilder.Entity<Match>()
+                .HasMany(m => m.MutualSongs)
+                .WithMany(); // Unidirectional relationship, matches know about songs, songs don't need to know about matches
+
+            modelBuilder.Entity<Match>()
+                .HasMany(m => m.MutualArtists)
+                .WithMany(); 
+
+            modelBuilder.Entity<Match>()
+                .HasMany(m => m.MutualGenres)
+                .WithMany();
+
             modelBuilder.Entity<User>()
                 .HasMany(u => u.FavoriteSongs)
-                .WithMany(); // Unidirectional relationship
+                .WithMany();
 
             modelBuilder.Entity<User>()
                 .HasMany(u => u.FavoriteArtists)
-                .WithMany(); // Unidirectional
+                .WithMany();
 
             modelBuilder.Entity<User>()
                 .HasMany(u => u.FavoriteGenres)
-                .WithMany(); // Unidirectional
+                .WithMany();
 
             modelBuilder.Entity<Song>()
                 .HasMany(s => s.Artists)
-                .WithMany(a => a.Songs); // Unidirectional
+                .WithMany();
 
             modelBuilder.Entity<Artist>()
                 .HasMany(s => s.Genres)
-                .WithMany(g => g.Artists);
+                .WithMany();
         }
     }
 }
