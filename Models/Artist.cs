@@ -2,7 +2,7 @@
 {
     public class Artist
     {
-        public Guid ArtistId { get; set; } = Guid.NewGuid();
+        public string ArtistId { get; set; } = Guid.NewGuid().ToString();
         public string Name { get; set; } = string.Empty;
         public string ArtistImageUrl { get; set; } = string.Empty;
         public string SpotifyId { get; set; } = string.Empty; // Artist's Spotify ID

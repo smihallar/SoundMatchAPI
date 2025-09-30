@@ -2,7 +2,7 @@
 {
     public class Song
     {
-        public Guid SongId { get; set; } = Guid.NewGuid();
+        public string SongId { get; set; } = Guid.NewGuid().ToString();
         public string Title { get; set; } = string.Empty;
         public string AlbumImageUrl { get; set; } = string.Empty;
         public int Popularity { get; set; } // Scale of 0-100, calculated by Spotify

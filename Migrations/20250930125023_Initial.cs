@@ -15,7 +15,7 @@ namespace SoundMatchAPI.Migrations
                 name: "Artists",
                 columns: table => new
                 {
-                    ArtistId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ArtistId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ArtistImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SpotifyId = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -49,7 +49,10 @@ namespace SoundMatchAPI.Migrations
                     CountryCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ProfilePictureUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Biography = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsSynthetic = table.Column<bool>(type: "bit", nullable: false),
+                    SpotifyRefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SpotifyTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -71,10 +74,21 @@ namespace SoundMatchAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Chats",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Chats", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Genres",
                 columns: table => new
                 {
-                    GenreId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    GenreId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -86,7 +100,7 @@ namespace SoundMatchAPI.Migrations
                 name: "Songs",
                 columns: table => new
                 {
-                    SongId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SongId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AlbumImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Popularity = table.Column<int>(type: "int", nullable: false),
@@ -122,7 +136,7 @@ namespace SoundMatchAPI.Migrations
                 name: "ArtistUser",
                 columns: table => new
                 {
-                    FavoriteArtistsArtistId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FavoriteArtistsArtistId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -231,7 +245,7 @@ namespace SoundMatchAPI.Migrations
                 name: "Matches",
                 columns: table => new
                 {
-                    MatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MatchId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     InitiatorUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     RecipientUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     CompatibilityScore = table.Column<int>(type: "int", nullable: false),
@@ -253,11 +267,62 @@ namespace SoundMatchAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ChatUser",
+                columns: table => new
+                {
+                    ChatsId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ParticipantsId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChatUser", x => new { x.ChatsId, x.ParticipantsId });
+                    table.ForeignKey(
+                        name: "FK_ChatUser_AspNetUsers_ParticipantsId",
+                        column: x => x.ParticipantsId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ChatUser_Chats_ChatsId",
+                        column: x => x.ChatsId,
+                        principalTable: "Chats",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    MessageId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    MessageContent = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SenderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ChatId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.MessageId);
+                    table.ForeignKey(
+                        name: "FK_Messages_AspNetUsers_SenderId",
+                        column: x => x.SenderId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Messages_Chats_ChatId",
+                        column: x => x.ChatId,
+                        principalTable: "Chats",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ArtistGenre",
                 columns: table => new
                 {
-                    ArtistId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    GenresGenreId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    ArtistId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    GenresGenreId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -280,7 +345,7 @@ namespace SoundMatchAPI.Migrations
                 name: "GenreUser",
                 columns: table => new
                 {
-                    FavoriteGenresGenreId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FavoriteGenresGenreId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -304,8 +369,8 @@ namespace SoundMatchAPI.Migrations
                 name: "ArtistSong",
                 columns: table => new
                 {
-                    ArtistsArtistId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SongId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    ArtistsArtistId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SongId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -328,7 +393,7 @@ namespace SoundMatchAPI.Migrations
                 name: "SongUser",
                 columns: table => new
                 {
-                    FavoriteSongsSongId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FavoriteSongsSongId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -352,8 +417,8 @@ namespace SoundMatchAPI.Migrations
                 name: "ArtistMatch",
                 columns: table => new
                 {
-                    MatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MutualArtistsArtistId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    MatchId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    MutualArtistsArtistId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -376,8 +441,8 @@ namespace SoundMatchAPI.Migrations
                 name: "GenreMatch",
                 columns: table => new
                 {
-                    MatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MutualGenresGenreId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    MatchId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    MutualGenresGenreId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -400,8 +465,8 @@ namespace SoundMatchAPI.Migrations
                 name: "MatchSong",
                 columns: table => new
                 {
-                    MatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MutualSongsSongId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    MatchId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    MutualSongsSongId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -480,6 +545,11 @@ namespace SoundMatchAPI.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ChatUser_ParticipantsId",
+                table: "ChatUser",
+                column: "ParticipantsId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_GenreMatch_MutualGenresGenreId",
                 table: "GenreMatch",
                 column: "MutualGenresGenreId");
@@ -503,6 +573,16 @@ namespace SoundMatchAPI.Migrations
                 name: "IX_MatchSong_MutualSongsSongId",
                 table: "MatchSong",
                 column: "MutualSongsSongId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_ChatId",
+                table: "Messages",
+                column: "ChatId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_SenderId",
+                table: "Messages",
+                column: "SenderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SongUser_UserId",
@@ -541,6 +621,9 @@ namespace SoundMatchAPI.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "ChatUser");
+
+            migrationBuilder.DropTable(
                 name: "GenreMatch");
 
             migrationBuilder.DropTable(
@@ -548,6 +631,9 @@ namespace SoundMatchAPI.Migrations
 
             migrationBuilder.DropTable(
                 name: "MatchSong");
+
+            migrationBuilder.DropTable(
+                name: "Messages");
 
             migrationBuilder.DropTable(
                 name: "SongUser");
@@ -563,6 +649,9 @@ namespace SoundMatchAPI.Migrations
 
             migrationBuilder.DropTable(
                 name: "Matches");
+
+            migrationBuilder.DropTable(
+                name: "Chats");
 
             migrationBuilder.DropTable(
                 name: "Songs");

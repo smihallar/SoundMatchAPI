@@ -2,7 +2,7 @@
 {
     public class Match
     {
-        public Guid MatchId { get; set; } = Guid.NewGuid();
+        public string MatchId { get; set; } = Guid.NewGuid().ToString();
         public required string InitiatorUserId { get; set; } // User who creates an account or refreshes matches.
         public required string RecipientUserId { get; set; } // User who is being matched with the initiator.
         public int CompatibilityScore { get; set; } // Score representing compatibility between users

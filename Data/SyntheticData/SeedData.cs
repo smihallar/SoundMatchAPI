@@ -33,7 +33,7 @@ namespace SoundMatchAPI.Data.SyntheticData
                 {
                     var artist = new Artist
                     {
-                        ArtistId = Guid.Parse(artistJson.GetProperty("ArtistId").GetString()!),
+                        ArtistId = artistJson.GetProperty("ArtistId").GetString()!,
                         Name = artistJson.GetProperty("name").GetString()!,
                         SpotifyId = artistJson.GetProperty("id").GetString()!,
                         Popularity = artistJson.GetProperty("popularity").GetInt32(),
@@ -41,7 +41,7 @@ namespace SoundMatchAPI.Data.SyntheticData
                         Genres = artistJson.TryGetProperty("Genres", out var genresJson)
                             ? genresJson.EnumerateArray().Select(g => new Genre
                             {
-                                GenreId = Guid.Parse(g.GetProperty("GenreId").GetString()!),
+                                GenreId = g.GetProperty("GenreId").GetString()!,
                                 Name = g.GetProperty("Name").GetString()!
                             }).ToList()
                             : new List<Genre>()
@@ -71,7 +71,7 @@ namespace SoundMatchAPI.Data.SyntheticData
                     {
                         var song = new Song
                         {
-                            SongId = songJson.GetProperty("SongId").GetGuid(),
+                            SongId = songJson.GetProperty("SongId").GetGuid().ToString(),
                             Title = songJson.GetProperty("Title").GetString() ?? "",
                             AlbumImageUrl = songJson.GetProperty("AlbumImageUrl").GetString() ?? "",
                             Popularity = songJson.GetProperty("Popularity").GetInt32(),
