@@ -64,5 +64,5 @@ namespace SoundMatchAPI.Data
                 .HasMany(s => s.Genres)
                 .WithMany();
         }
-    }
+    } 
 }

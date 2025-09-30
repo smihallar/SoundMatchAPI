@@ -13,6 +13,7 @@ namespace SoundMatchAPI.Models
         public string CountryCode { get; set; } = string.Empty; // ex. "US", "GB"
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string ProfilePictureUrl { get; set; } = string.Empty;
+        public bool IsSynthetic { get; set; }
 
         // Navigation properties
         public List<Song> FavoriteSongs { get; set; } = new List<Song>();

@@ -24,11 +24,11 @@ namespace SoundMatchAPI.Migrations
 
             modelBuilder.Entity("ArtistGenre", b =>
                 {
-                    b.Property<int>("ArtistId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ArtistId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("GenresGenreId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("GenresGenreId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ArtistId", "GenresGenreId");
 
@@ -42,8 +42,8 @@ namespace SoundMatchAPI.Migrations
                     b.Property<Guid>("MatchId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("MutualArtistsArtistId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MutualArtistsArtistId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("MatchId", "MutualArtistsArtistId");
 
@@ -54,11 +54,11 @@ namespace SoundMatchAPI.Migrations
 
             modelBuilder.Entity("ArtistSong", b =>
                 {
-                    b.Property<int>("ArtistsArtistId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ArtistsArtistId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("SongId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("SongId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ArtistsArtistId", "SongId");
 
@@ -69,8 +69,8 @@ namespace SoundMatchAPI.Migrations
 
             modelBuilder.Entity("ArtistUser", b =>
                 {
-                    b.Property<int>("FavoriteArtistsArtistId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("FavoriteArtistsArtistId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
@@ -87,8 +87,8 @@ namespace SoundMatchAPI.Migrations
                     b.Property<Guid>("MatchId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("MutualGenresGenreId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MutualGenresGenreId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("MatchId", "MutualGenresGenreId");
 
@@ -99,8 +99,8 @@ namespace SoundMatchAPI.Migrations
 
             modelBuilder.Entity("GenreUser", b =>
                 {
-                    b.Property<int>("FavoriteGenresGenreId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("FavoriteGenresGenreId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
@@ -117,8 +117,8 @@ namespace SoundMatchAPI.Migrations
                     b.Property<Guid>("MatchId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("MutualSongsSongId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MutualSongsSongId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("MatchId", "MutualSongsSongId");
 
@@ -262,8 +262,8 @@ namespace SoundMatchAPI.Migrations
 
             modelBuilder.Entity("SongUser", b =>
                 {
-                    b.Property<int>("FavoriteSongsSongId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("FavoriteSongsSongId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
@@ -277,17 +277,22 @@ namespace SoundMatchAPI.Migrations
 
             modelBuilder.Entity("SoundMatchAPI.Models.Artist", b =>
                 {
-                    b.Property<int>("ArtistId")
+                    b.Property<Guid>("ArtistId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ArtistId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ArtistImageUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Popularity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SpotifyId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -298,11 +303,9 @@ namespace SoundMatchAPI.Migrations
 
             modelBuilder.Entity("SoundMatchAPI.Models.Genre", b =>
                 {
-                    b.Property<int>("GenreId")
+                    b.Property<Guid>("GenreId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GenreId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -344,13 +347,18 @@ namespace SoundMatchAPI.Migrations
 
             modelBuilder.Entity("SoundMatchAPI.Models.Song", b =>
                 {
-                    b.Property<int>("SongId")
+                    b.Property<Guid>("SongId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SongId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AlbumImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Popularity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SpotifyId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -387,6 +395,9 @@ namespace SoundMatchAPI.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSynthetic")
                         .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
