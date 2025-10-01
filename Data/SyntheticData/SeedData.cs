@@ -23,7 +23,7 @@ namespace SoundMatchAPI.Data.SyntheticData
             // Seed synthetic users from JSON
             if (!ctx.Users.Any(u => u.IsSynthetic))
             {
-                var json = await File.ReadAllTextAsync("Data/SyntheticData/spotify_seed_data.json");
+                var json = await File.ReadAllTextAsync("Data/SyntheticData/spotify_seed_data.json"); // JSON file with spotify data of artists, songs and genres
                 var seedData = JsonDocument.Parse(json);
 
                 // Example: create synthetic users with favorite artists

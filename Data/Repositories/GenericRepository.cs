@@ -15,12 +15,15 @@ namespace SoundMatchAPI.Data.Repositories
         }
         public async virtual Task AddAsync(T entity)
         {
+            
             dbSet.Add(entity);
             await SaveChangesAsync();
         }
 
-        public async virtual Task DeleteAsync( T entity)
+        public async virtual Task DeleteAsync(string id)
         {
+            var entity = await GetByIdAsync(id);
+            if (entity == null) return;
             dbSet.Remove(entity);
             await SaveChangesAsync();
         }
@@ -30,7 +33,7 @@ namespace SoundMatchAPI.Data.Repositories
             return await dbSet.ToListAsync();
         }
 
-        public async virtual Task<T?> GetByIdAsync(int id)
+        public async virtual Task<T?> GetByIdAsync(string id)
         {
             return await dbSet.FindAsync(id);
         }
