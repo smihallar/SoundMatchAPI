@@ -2,7 +2,7 @@
 {
     public class Genre
     {
-        public int GenreId { get; set; }
+        public string GenreId { get; set; } = Guid.NewGuid().ToString();
         public string Name { get; set; } = string.Empty;
     }
 }

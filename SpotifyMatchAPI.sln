@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundMatchAPI", "SoundMatchAPI.csproj", "{206371BB-B9BA-447A-AAD8-D0EBEC79FADC}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.SoundMatchAPI", "..\Test.SoundMatchAPI\Test.SoundMatchAPI.csproj", "{C7A877A3-23C8-430C-8214-CBB33862DD17}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpotifyMatchAPI", "SpotifyMatchAPI.csproj", "{206371BB-B9BA-447A-AAD8-D0EBEC79FADC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{206371BB-B9BA-447A-AAD8-D0EBEC79FADC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{206371BB-B9BA-447A-AAD8-D0EBEC79FADC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{206371BB-B9BA-447A-AAD8-D0EBEC79FADC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C7A877A3-23C8-430C-8214-CBB33862DD17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C7A877A3-23C8-430C-8214-CBB33862DD17}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C7A877A3-23C8-430C-8214-CBB33862DD17}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C7A877A3-23C8-430C-8214-CBB33862DD17}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,15 +3,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SoundMatchAPI.Models
 {
-    public class User
+    public class User : IdentityUser
     {
-        public string UserId { get; set; } = Guid.NewGuid().ToString();
-        public string Email { get; set; } = string.Empty;
-        public string UserName { get; set; } = string.Empty;
+        public User()
+        {
+            Id = Guid.NewGuid().ToString();
+        }
         public string SpotifyUserId { get; set; } = string.Empty;
         public string CountryCode { get; set; } = string.Empty; // ex. "US", "GB"
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string ProfilePictureUrl { get; set; } = string.Empty;
+        public string Biography { get; set; } = string.Empty;
+        public bool IsSynthetic { get; set; }
+        public string? SpotifyRefreshToken { get; set; }
+        public DateTime? SpotifyTokenExpiresAt { get; set; }
+
 
         // Navigation properties
         public List<Song> FavoriteSongs { get; set; } = new List<Song>();
@@ -19,6 +25,7 @@ namespace SoundMatchAPI.Models
         public List<Genre> FavoriteGenres { get; set; } = new List<Genre>();
         public List<Match> MatchesAsInitiator { get; set; } = new List<Match>();
         public List<Match> MatchesAsRecipient { get; set; } = new List<Match>();
+        public List<Chat> Chats { get; set; } = new List<Chat>();
 
         // Combined Matches-property to get all matches regardless of role (initiator or recipient). Not mapped to DB
         [NotMapped]

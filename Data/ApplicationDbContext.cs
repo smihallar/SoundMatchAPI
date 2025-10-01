@@ -4,7 +4,7 @@ using SoundMatchAPI.Models;
 
 namespace SoundMatchAPI.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<User>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
@@ -14,6 +14,8 @@ namespace SoundMatchAPI.Data
         public DbSet<Artist> Artists { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<Match> Matches { get; set; }
+        public DbSet<Chat> Chats { get; set; }
+        public DbSet<Message> Messages { get; set; }
 
         // Configure entity relationships and constraints, and adds cascading deletes for matches
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -64,5 +66,5 @@ namespace SoundMatchAPI.Data
                 .HasMany(s => s.Genres)
                 .WithMany();
         }
-    }
+    } 
 }
