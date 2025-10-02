@@ -26,7 +26,6 @@ namespace SoundMatchAPI.Data.SyntheticData
                 var json = await File.ReadAllTextAsync("Data/SyntheticData/spotify_seed_data.json"); // JSON file with spotify data of artists, songs and genres
                 var seedData = JsonDocument.Parse(json);
 
-                // Example: create synthetic users with favorite artists
                 var artists = seedData.RootElement.GetProperty("Artists");
                 var artistList = new List<Artist>();
                 foreach (var artistJson in artists.EnumerateArray())
