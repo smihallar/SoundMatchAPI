@@ -1,4 +1,4 @@
-﻿namespace SoundMatchAPI.Models
+﻿namespace SoundMatchAPI.Data.Models
 {
     public class Match
     {

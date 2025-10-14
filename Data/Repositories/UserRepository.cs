@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoundMatchAPI.Models;
+using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data.Repositories
 {
@@ -21,6 +21,7 @@ namespace SoundMatchAPI.Data.Repositories
                     .ThenInclude(a => a.Genres)
                 .Include(u => u.FavoriteGenres)
                 .FirstOrDefaultAsync(u => u.Id == id);
+            
         }
 
         public async Task<IEnumerable<User?>> GetAllUsersWithDetailsAsync()

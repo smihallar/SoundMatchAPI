@@ -1,4 +1,6 @@
-﻿namespace SoundMatchAPI.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SoundMatchAPI.Data.Models
 {
     public class Artist
     {

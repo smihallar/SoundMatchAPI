@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoundMatchAPI.Models
+namespace SoundMatchAPI.Data.Models
 {
     public class Message
     {

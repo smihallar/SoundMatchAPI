@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SoundMatchAPI.Models;
+using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data
 {

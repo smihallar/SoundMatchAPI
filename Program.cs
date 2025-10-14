@@ -2,8 +2,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SoundMatchAPI.Data;
+using SoundMatchAPI.Data.Models;
+using SoundMatchAPI.Data.Repositories;
 using SoundMatchAPI.Data.SyntheticData;
-using SoundMatchAPI.Models;
 using System;
 using System.Threading.Tasks;
 
@@ -29,6 +30,12 @@ namespace SoundMatchAPI
                             .AddRoles<IdentityRole>()
                             .AddEntityFrameworkStores<ApplicationDbContext>();  
 
+            // Repositories
+            builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped<ArtistRepository>();
+            builder.Services.AddScoped<GenreRepository>();
+            builder.Services.AddScoped<MatchRepository>();
+            builder.Services.AddScoped<SongRepository>();
             var app = builder.Build();
 
             app.UseCors("AllowAll");

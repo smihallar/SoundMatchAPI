@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SoundMatchAPI.Models
+namespace SoundMatchAPI.Data.Models
 {
     public class User : IdentityUser
     {
@@ -15,7 +15,11 @@ namespace SoundMatchAPI.Models
         public string ProfilePictureUrl { get; set; } = string.Empty;
         public string Biography { get; set; } = string.Empty;
         public bool IsSynthetic { get; set; }
+        [ProtectedPersonalData]
+        [PersonalData]
         public string? SpotifyRefreshToken { get; set; }
+        [ProtectedPersonalData]
+        [PersonalData]
         public DateTime? SpotifyTokenExpiresAt { get; set; }
 
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using SoundMatchAPI.Constants;
+using SoundMatchAPI.Data.Models;
 using SoundMatchAPI.Models;
 using System.Text.Json;
 
