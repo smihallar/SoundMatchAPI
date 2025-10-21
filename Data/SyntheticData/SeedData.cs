@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using SoundMatchAPI.Constants;
 using SoundMatchAPI.Data.Models;
-using SoundMatchAPI.Models;
 using System.Text.Json;
 
 namespace SoundMatchAPI.Data.SyntheticData
@@ -15,7 +14,6 @@ namespace SoundMatchAPI.Data.SyntheticData
                 var roles = new List<IdentityRole>
                 {
                     new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "User", NormalizedName = ApiRoles.User },
-                    new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "Admin", NormalizedName = ApiRoles.Admin }
                 };
                 ctx.Roles.AddRange(roles);
                 await ctx.SaveChangesAsync();
@@ -102,6 +100,16 @@ namespace SoundMatchAPI.Data.SyntheticData
                 // Create synthetic users
                 for (int i = 0; i < 150; i++)
                 {
+                    // Select favorite artists, genres, and songs
+                    var favoriteArtists = artistList.OrderBy(_ => Guid.NewGuid()).Take(25).ToList();
+                    var favoriteGenres = artistList
+                        .SelectMany(a => a.Genres)
+                        .Distinct()
+                        .OrderBy(_ => Guid.NewGuid())
+                        .Take(10)
+                        .ToList();
+                    var favoriteSongs = songs.OrderBy(_ => Guid.NewGuid()).Take(60).ToList();
+
                     var user = new User
                     {
                         UserName = $"synthetic_user_{i}",
@@ -109,11 +117,38 @@ namespace SoundMatchAPI.Data.SyntheticData
                         CountryCode = "SE",
                         IsSynthetic = true,
                         ProfilePictureUrl = "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
-                        FavoriteArtists = artistList.OrderBy(_ => Guid.NewGuid()).Take(25).ToList(),
-                        FavoriteGenres = artistList.SelectMany(a => a.Genres).Distinct().OrderBy(_ => Guid.NewGuid()).Take(10).ToList(),
-                        FavoriteSongs = songs.OrderBy(_ => Guid.NewGuid()).Take(60).ToList()
+                        FavoriteArtistIds = favoriteArtists.Select(a => a.ArtistId).ToList(),
+                        FavoriteGenreIds = favoriteGenres.Select(g => g.GenreId).ToList(),
+                        FavoriteSongIds = favoriteSongs.Select(s => s.SongId).ToList(),
+                        FavoriteArtists = favoriteArtists,
+                        FavoriteGenres = favoriteGenres,
+                        FavoriteSongs = favoriteSongs,
+                        IsConnectedToSpotify = true
                     };
                     ctx.Users.Add(user);
+                }
+                await ctx.SaveChangesAsync();
+
+                // Fetch some users to have matching favorites to ensure matching logic
+                var usersToMatch = ctx.Users
+                    .OrderBy(u => u.UserName)
+                    .Take(3)
+                    .ToList();
+
+                // Shared favorites (e.g., from existing songs/artists/genres)
+                var sharedSongIds = ctx.Songs.Take(5).Select(s => s.SongId).ToList();
+                var sharedArtistIds = ctx.Artists.Take(2).Select(a => a.ArtistId).ToList();
+                var sharedGenreIds = ctx.Genres.Take(2).Select(g => g.GenreId).ToList();
+
+                // Assign the shared favorites to these users
+                foreach (var user in usersToMatch)
+                {
+                    user.FavoriteSongIds.AddRange(sharedSongIds);
+                    user.FavoriteArtistIds.AddRange(sharedArtistIds);
+                    user.FavoriteGenreIds.AddRange(sharedGenreIds);
+                    user.FavoriteSongs.AddRange(ctx.Songs.Where(s => sharedSongIds.Contains(s.SongId)).ToList());
+                    user.FavoriteArtists.AddRange(ctx.Artists.Where(a => sharedArtistIds.Contains(a.ArtistId)).ToList());
+                    user.FavoriteGenres.AddRange(ctx.Genres.Where(g => sharedGenreIds.Contains(g.GenreId)).ToList());
                 }
                 await ctx.SaveChangesAsync();
             }

@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SoundMatchAPI.Data.Interfaces;
 using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data.Repositories
 {
-    public class MatchRepository : GenericRepository<Match>
+    public class MatchRepository : GenericRepository<Match>, IMatchRepository
     {
         private readonly ApplicationDbContext ctx;
         public MatchRepository(ApplicationDbContext ctx) : base(ctx)
@@ -11,32 +12,38 @@ namespace SoundMatchAPI.Data.Repositories
             this.ctx = ctx;
         }
 
-        public async Task<IEnumerable<Match?>> GetMatchesWithDetailsByUserId(string id)
+        public Task AddMatchesAsync(IEnumerable<Match> matches)
+        {
+            ctx.Matches.AddRange(matches);
+            return ctx.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Match?>> GetMatchesWithDetailsByUserIdAsync(string userId)
         {
             return await ctx.Matches
                 .Include(m => m.InitiatorUser)
-                    .ThenInclude(u => u.FavoriteSongs)
-                        .ThenInclude(s => s.Artists)
-                            .ThenInclude(a => a.Genres)
-                .Include(m => m.InitiatorUser)
-                    .ThenInclude(u => u.FavoriteArtists)
-                        .ThenInclude(a => a.Genres)
-                            .Include(m => m.InitiatorUser)
-                                .ThenInclude(u => u.FavoriteGenres)
                 .Include(m => m.RecipientUser)
-                    .ThenInclude(u => u.FavoriteSongs)
-                        .ThenInclude(s => s.Artists)
-                            .ThenInclude(a => a.Genres)
-                .Include(m => m.RecipientUser)
-                    .ThenInclude(u => u.FavoriteArtists)
-                        .ThenInclude(a => a.Genres)
-                            .Include(m => m.RecipientUser)
-                                .ThenInclude(u => u.FavoriteGenres)
                 .Include(m => m.MutualSongs)
+                    .ThenInclude(s => s.Artists)
+                        .ThenInclude(a => a.Genres)
                 .Include(m => m.MutualArtists)
+                    .ThenInclude(a => a.Genres)
                 .Include(m => m.MutualGenres)
-                .Where(m => m.InitiatorUserId == id || m.RecipientUserId == id)
+                .Where(m => m.InitiatorUserId == userId || m.RecipientUserId == userId)
                 .ToListAsync();
+        }
+        public async Task<Match?> GetMatchWithDetailsByIdAsync(string matchId)
+        {
+             return await ctx.Matches
+                .Include(m => m.InitiatorUser)
+                .Include(m => m.RecipientUser)
+                .Include(m => m.MutualSongs)
+                    .ThenInclude(s => s.Artists)
+                        .ThenInclude(a => a.Genres)
+                .Include(m => m.MutualArtists)
+                    .ThenInclude(a => a.Genres)
+                .Include(m => m.MutualGenres)
+            .FirstOrDefaultAsync(m => m.MatchId == matchId);
         }
     }
 }

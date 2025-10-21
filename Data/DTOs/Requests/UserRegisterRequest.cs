@@ -1,8 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SoundMatchAPI.Data.DTOs
+namespace SoundMatchAPI.Data.DTOs.Requests
 {
-    public class UserCreateRequest
+    // Used for registration purposes, user not connected to Spotify
+    public class UserRegisterRequest
     {
         [Required]
         [EmailAddress]

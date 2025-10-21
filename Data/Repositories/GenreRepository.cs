@@ -1,13 +1,22 @@
-﻿using SoundMatchAPI.Data.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data.Repositories
 {
-    public class GenreRepository : GenericRepository<Genre>
+    public class GenreRepository : GenericRepository<Genre>, IGenreRepository
     {
         private readonly ApplicationDbContext ctx;
         public GenreRepository(ApplicationDbContext ctx) : base(ctx)
         {
             this.ctx = ctx;
+        }
+
+        public async Task<IEnumerable<Genre>> GetByIdsAsync(IEnumerable<string> genreIds)
+        {
+            return await ctx.Genres
+                .Where(g => genreIds.Contains(g.GenreId))
+                .ToListAsync();
         }
     }
 }

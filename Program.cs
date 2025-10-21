@@ -1,12 +1,17 @@
-
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SoundMatchAPI.Data;
+using SoundMatchAPI.Data.Interfaces;
 using SoundMatchAPI.Data.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using SoundMatchAPI.Data.Repositories;
 using SoundMatchAPI.Data.SyntheticData;
+using SoundMatchAPI.Services;
 using System;
 using System.Threading.Tasks;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace SoundMatchAPI
 {
@@ -16,8 +21,18 @@ namespace SoundMatchAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin() // Update to client port
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
 
+            // Add services to the container.
+            builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -31,11 +46,36 @@ namespace SoundMatchAPI
                             .AddEntityFrameworkStores<ApplicationDbContext>();  
 
             // Repositories
-            builder.Services.AddScoped<UserRepository>();
-            builder.Services.AddScoped<ArtistRepository>();
-            builder.Services.AddScoped<GenreRepository>();
-            builder.Services.AddScoped<MatchRepository>();
-            builder.Services.AddScoped<SongRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IMatchRepository, MatchRepository>();
+            builder.Services.AddScoped<IArtistRepository, ArtistRepository>();
+            builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+            builder.Services.AddScoped<ISongRepository, SongRepository>();
+
+            // Services
+            builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<MatchService>();
+            builder.Services.AddScoped<MusicProfileService>();
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero,
+                    ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+                    ValidAudience = builder.Configuration["JwtSettings:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"] ?? string.Empty))
+                };
+            });
+
             var app = builder.Build();
 
             app.UseCors("AllowAll");
@@ -55,8 +95,10 @@ namespace SoundMatchAPI
             }
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
+            app.UseCors("AllowAll");
 
+            app.UseAuthorization();
+            app.UseAuthentication();
 
             app.MapControllers();
 
