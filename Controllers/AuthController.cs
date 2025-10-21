@@ -16,15 +16,29 @@ namespace SoundMatchAPI.Controllers
             this.authService = authService;
         }
 
-        // POST: api/Auth/register
-        [HttpPost("register")]
+       //POST: api/Auth/register
+       [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterRequest request)
         {
-            if(ModelState.IsValid == false)
+            if (ModelState.IsValid == false)
             {
                 return BadRequest(ModelState);
             }
             var result = await authService.RegisterUserAsync(request);
+
+            if (!result.Succeeded)
+            {
+                if (result.Errors != null)
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError("", error);
+                    }
+                }
+                return BadRequest(ModelState);
+            }
+
+            return Accepted();
         }
     }
 }

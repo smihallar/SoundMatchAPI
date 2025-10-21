@@ -2,6 +2,7 @@
 using SoundMatchAPI.Constants;
 using SoundMatchAPI.Data.Models;
 using System.Text.Json;
+using System.Reflection.Emit;
 
 namespace SoundMatchAPI.Data.SyntheticData
 {
@@ -22,6 +23,7 @@ namespace SoundMatchAPI.Data.SyntheticData
             // Seed synthetic users from JSON
             if (!ctx.Users.Any(u => u.IsSynthetic))
             {
+                var hasher = new PasswordHasher<User>();
                 var json = await File.ReadAllTextAsync("Data/SyntheticData/spotify_seed_data.json"); // JSON file with spotify data of artists, songs and genres
                 var seedData = JsonDocument.Parse(json);
 
@@ -113,7 +115,9 @@ namespace SoundMatchAPI.Data.SyntheticData
                     var user = new User
                     {
                         UserName = $"synthetic_user_{i}",
+                        NormalizedUserName = $"SYNTHETIC_USER_{i}",
                         Email = $"synthetic_user_{i}@example.com",
+                        NormalizedEmail = $"SYNTHETIC_USER_{i}@EXAMPLE.COM",
                         CountryCode = "SE",
                         IsSynthetic = true,
                         ProfilePictureUrl = "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
@@ -125,11 +129,12 @@ namespace SoundMatchAPI.Data.SyntheticData
                         FavoriteSongs = favoriteSongs,
                         IsConnectedToSpotify = true
                     };
+                    user.PasswordHash = hasher.HashPassword(user, "Synthetic123!");
                     ctx.Users.Add(user);
                 }
                 await ctx.SaveChangesAsync();
 
-                // Fetch some users to have matching favorites to ensure matching logic
+                // Ensure some users have overlapping favorites for matching
                 var usersToMatch = ctx.Users
                     .OrderBy(u => u.UserName)
                     .Take(3)

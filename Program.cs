@@ -56,6 +56,7 @@ namespace SoundMatchAPI
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<MatchService>();
             builder.Services.AddScoped<MusicProfileService>();
+            builder.Services.AddScoped<AuthService>();
 
             builder.Services.AddAuthentication(options =>
             {
@@ -72,7 +73,7 @@ namespace SoundMatchAPI
                     ClockSkew = TimeSpan.Zero,
                     ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
                     ValidAudience = builder.Configuration["JwtSettings:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"] ?? string.Empty))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
                 };
             });
 

@@ -36,7 +36,8 @@ namespace SoundMatchAPI.Services
                 }
                 var newUser = new User
                 {
-                    Email = request.Email
+                    Email = request.Email,
+                    UserName = request.Email // When not connected to Spotify, username is the email
                 };
                 var createUserResult = await userManager.CreateAsync(newUser, request.Password);
                 if (!createUserResult.Succeeded)
@@ -75,7 +76,7 @@ namespace SoundMatchAPI.Services
                     return new AuthResult
                     {
                         Succeeded = false,
-                        Errors = new List<string> { "Felaktig e-post eller lösenord." },
+                        Errors = new List<string> { "Wrong email or password." },
                     };
                 }
 
@@ -129,7 +130,5 @@ namespace SoundMatchAPI.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
-
     }
 }
