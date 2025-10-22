@@ -23,6 +23,7 @@ namespace SoundMatchAPI.Data.Repositories
         {
             return await ctx.Artists
                 .Where(a => artistIds.Contains(a.ArtistId))
+                .Include(a => a.Genres)
                 .ToListAsync();
         }
     }

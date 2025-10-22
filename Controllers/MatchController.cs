@@ -34,9 +34,9 @@ namespace SoundMatchAPI.Controllers
         }
 
         // Find and create new matches for a user
-        // POST: api/Match/{userId}
+        // POST: api/Match/all/{userId}
         [HttpPost("all/{userId}")]
-        public async Task<IActionResult> CreateMatches(string userId)
+        public async Task<IActionResult> FindMatches(string userId)
         {
             var returnResponse = await matchService.AddMatches(userId);
             switch (returnResponse.StatusCode)

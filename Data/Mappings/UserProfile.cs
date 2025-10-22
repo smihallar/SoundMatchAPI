@@ -23,17 +23,17 @@ namespace SoundMatchAPI.Data.Mappings
                 );
             // Mapping from UserCreateRequest (source) to User (destination)
             CreateMap<UserRegisterRequest, User>();
-            // Mapping from UserUpdateRequest (source) to User (destination), where favorite lists are ignored since it is manually handled
-            CreateMap<UserUpdateRequest, User>()
+            CreateMap<User, UserProfileResponse>()
                 .ForMember(
-                   d => d.FavoriteSongs,
-                   o => o.Ignore())
+                    d => d.FavoriteSongs,
+                    o => o.MapFrom(s => s.FavoriteSongs))
                 .ForMember(
-                   d => d.FavoriteArtists,
-                   o => o.Ignore())
+                    d => d.FavoriteArtists,
+                    o => o.MapFrom(s => s.FavoriteArtists))
                 .ForMember(
-                   d => d.FavoriteGenres,
-                   o => o.Ignore());
+                    d => d.FavoriteGenres,
+                    o => o.MapFrom(s => s.FavoriteGenres)
+                );
         }
     }
 }

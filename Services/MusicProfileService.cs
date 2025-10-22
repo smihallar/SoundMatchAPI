@@ -4,7 +4,7 @@ using SoundMatchAPI.Data.Repositories;
 
 namespace SoundMatchAPI.Services
 {
-    public class MusicProfileService
+    public class MusicProfileService : IMusicProfileService
     {
         private readonly ISongRepository songRepository;
         private readonly IGenreRepository genreRepository;
@@ -14,18 +14,18 @@ namespace SoundMatchAPI.Services
             IArtistRepository artistRepository)
         {
             this.songRepository = songRepository;
-            this.genreRepository = genreRepository;
             this.artistRepository = artistRepository;
+            this.genreRepository = genreRepository;
         }
 
-        public async Task<MusicProfile> GetProfileAsync(List<string> favoriteSongIds, List<string> favoriteGenreIds,
-            List<string> favoriteArtistIds)
+        public async Task<MusicProfile> GetProfileAsync(List<string> favoriteSongIds, List<string> favoriteArtistIds,
+            List<string> favoriteGenreIds)
         {
             var songs = await songRepository.GetByIdsAsync(favoriteSongIds);
-            var genres = await genreRepository.GetByIdsAsync(favoriteGenreIds);
             var artists = await artistRepository.GetByIdsAsync(favoriteArtistIds);
+            var genres = await genreRepository.GetByIdsAsync(favoriteGenreIds);
 
-            return new MusicProfile(songs, genres, artists);
+            return new MusicProfile(songs, artists, genres);
         }
     }
 }

@@ -93,13 +93,13 @@ namespace SoundMatchAPI.Services
                     // Get music profiles for both users, based on their favorite songs, artists, genres
                     var candidateProfile = await musicProfileService.GetProfileAsync(
                         candidate.FavoriteSongIds ?? new List<string>(),
-                        candidate.FavoriteGenreIds ?? new List<string>(),
-                        candidate.FavoriteArtistIds ?? new List<string>());
+                        candidate.FavoriteArtistIds ?? new List<string>(),
+                        candidate.FavoriteGenreIds ?? new List<string>());
 
                     var initiatorProfile = await musicProfileService.GetProfileAsync(
                         initiatorUser.FavoriteSongIds ?? new List<string>(),
-                        initiatorUser.FavoriteGenreIds ?? new List<string>(),
-                        initiatorUser.FavoriteArtistIds ?? new List<string>());
+                        initiatorUser.FavoriteArtistIds ?? new List<string>(),
+                        initiatorUser.FavoriteGenreIds ?? new List<string>());
 
                     var candidateSongs = candidateProfile.Songs;
                     var candidateArtists = candidateProfile.Artists;

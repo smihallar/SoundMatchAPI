@@ -16,6 +16,8 @@ namespace SoundMatchAPI.Data.Repositories
         {
             return await ctx.Songs
                 .Where(s => songIds.Contains(s.SongId))
+                .Include(s => s.Artists)
+                    .ThenInclude(a => a.Genres)
                 .ToListAsync();
         }
 

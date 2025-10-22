@@ -80,9 +80,32 @@ namespace SoundMatchAPI.Data.SyntheticData
                             Artists = songJson.TryGetProperty("Artists", out var songArtistsJson)
                             ? songArtistsJson.EnumerateArray()
                                 .Select(a =>
-                                    artistList.FirstOrDefault(x =>
-                                        x.ArtistId.ToString() == a.GetProperty("ArtistId").GetString())
-                                )
+                                {
+                                    var artistId = a.GetProperty("ArtistId").GetString();
+                                    var artist = artistList.FirstOrDefault(x => x.ArtistId == artistId);
+                                    if (artist == null)
+                                    {
+                                        // Create new artist if not found
+                                        artist = new Artist
+                                        {
+                                            ArtistId = artistId,
+                                            Name = a.GetProperty("name").GetString() ?? "",
+                                            SpotifyId = a.GetProperty("id").GetString() ?? "",
+                                            Popularity = a.GetProperty("popularity").GetInt32(),
+                                            ArtistImageUrl = a.GetProperty("ArtistImageUrl").GetString() ?? "",
+                                            Genres = a.TryGetProperty("Genres", out var genresJson)
+                                                ? genresJson.EnumerateArray().Select(g => new Genre
+                                                {
+                                                    GenreId = g.GetProperty("GenreId").GetString() ?? "",
+                                                    Name = g.GetProperty("Name").GetString() ?? ""
+                                                }).ToList()
+                                                : new List<Genre>()
+                                        };
+                                        artistList.Add(artist);
+                                        ctx.Artists.Add(artist);
+                                    }
+                                    return artist;
+                                })
                                 .Where(a => a != null)
                                 .ToList()!
                             : new List<Artist>()

@@ -45,5 +45,14 @@ namespace SoundMatchAPI.Data.Repositories
                 .Include(m => m.MutualGenres)
             .FirstOrDefaultAsync(m => m.MatchId == matchId);
         }
+
+        public async Task DeleteMatchesByUserIdAsync(string userId)
+        {
+            var matches = await ctx.Matches
+                .Where(m => m.InitiatorUserId == userId || m.RecipientUserId == userId)
+                .ToListAsync();
+            ctx.Matches.RemoveRange(matches);
+            await ctx.SaveChangesAsync();
+        }
     }
 }

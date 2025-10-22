@@ -7,5 +7,6 @@ namespace SoundMatchAPI.Data.Interfaces
         Task<IEnumerable<Match?>> GetMatchesWithDetailsByUserIdAsync(string userId);
         Task<Match?> GetMatchWithDetailsByIdAsync(string matchId);
         Task AddMatchesAsync(IEnumerable<Match> matches);
+        Task DeleteMatchesByUserIdAsync(string userId);
     }
 }

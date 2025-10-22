@@ -5,14 +5,14 @@ namespace SoundMatchAPI.Data.DomainModels
     public class MusicProfile
     {
         public IEnumerable<Song> Songs { get; }
-        public IEnumerable<Genre> Genres { get; }
         public IEnumerable<Artist> Artists { get; }
+        public IEnumerable<Genre> Genres { get; }
 
-        public MusicProfile(IEnumerable<Song> songs, IEnumerable<Genre> genres, IEnumerable<Artist> artists)
+        public MusicProfile(IEnumerable<Song> songs, IEnumerable<Artist> artists, IEnumerable<Genre> genres)
         {
             Songs = songs;
-            Genres = genres;
             Artists = artists;
+            Genres = genres;
         }
     }
 }

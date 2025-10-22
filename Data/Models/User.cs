@@ -16,13 +16,13 @@ namespace SoundMatchAPI.Data.Models
         public string Biography { get; set; } = string.Empty;
         public bool IsSynthetic { get; set; }
         public bool IsConnectedToSpotify { get; set; } // Indicates if the user has connected their Spotify account
-        public DateTime MusicTasteLastRefreshed { get; set; } = DateTime.MinValue; // When the user's music taste was last refreshed from Spotify, stored to avoid excessive API calls
+        public DateTime MusicTasteLastRefreshed { get; set; } = DateTime.MinValue; // When the user's music taste was last refreshed from Spotify, stored to avoid excessive Spotify API calls
         [ProtectedPersonalData]
         [PersonalData]
-        public string? SpotifyRefreshToken { get; set; }
+        public string? SpotifyRefreshToken { get; set; } // Refresh token for Spotify API, used to get new access tokens
         [ProtectedPersonalData]
         [PersonalData]
-        public DateTime? SpotifyTokenExpiresAt { get; set; }
+        public DateTime? SpotifyTokenExpiresAt { get; set; } // When the current Spotify token expires
 
 
         // Navigation properties 
