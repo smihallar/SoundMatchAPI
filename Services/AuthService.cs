@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using SoundMatchAPI.Constants;
 using SoundMatchAPI.Data.AuthModels;
 using SoundMatchAPI.Data.DTOs.Requests;
+using SoundMatchAPI.Data.Interfaces;
 using SoundMatchAPI.Data.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -10,7 +11,7 @@ using System.Text;
 
 namespace SoundMatchAPI.Services
 {
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private readonly UserManager<User> userManager;
         private readonly IConfiguration configuration;

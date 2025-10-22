@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SoundMatchAPI.Data.Interfaces;
 using SoundMatchAPI.Services;
 using System.Net;
 
@@ -9,9 +10,9 @@ namespace SoundMatchAPI.Controllers
     [ApiController]
     public class MatchController : ControllerBase
     {
-        private readonly MatchService matchService;
+        private readonly IMatchService matchService;
 
-        public MatchController(MatchService matchService)
+        public MatchController(IMatchService matchService)
         {
             this.matchService = matchService;
         }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using SoundMatchAPI.Data.AuthModels;
 using SoundMatchAPI.Data.DTOs.Requests;
+using SoundMatchAPI.Data.Interfaces;
 using SoundMatchAPI.Services;
 
 namespace SoundMatchAPI.Controllers
@@ -11,9 +12,9 @@ namespace SoundMatchAPI.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly AuthService authService;
+        private readonly IAuthService authService;
 
-        public AuthController(AuthService authService)
+        public AuthController(IAuthService authService)
         {
             this.authService = authService;
         }

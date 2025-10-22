@@ -54,9 +54,9 @@ namespace SoundMatchAPI
 
             // Services
             builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<MatchService>();
+            builder.Services.AddScoped<IMatchService, MatchService>();
             builder.Services.AddScoped<IMusicProfileService, MusicProfileService>();
-            builder.Services.AddScoped<AuthService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
 
             builder.Services.AddAuthentication(options =>
             {

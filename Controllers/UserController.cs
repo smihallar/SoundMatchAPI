@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SoundMatchAPI.Constants;
 using SoundMatchAPI.Data.DTOs.Requests;
+using SoundMatchAPI.Data.Interfaces;
 using SoundMatchAPI.Services;
 using System.Net;
 
@@ -12,9 +13,9 @@ namespace SoundMatchAPI.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly UserService userService;
+        private readonly IUserService userService;
 
-        public UserController(UserService userService)
+        public UserController(IUserService userService)
         {
             this.userService = userService;
         }

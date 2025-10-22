@@ -7,13 +7,13 @@ using System.Net;
 
 namespace SoundMatchAPI.Services
 {
-    public class MatchService
+    public class MatchService : IMatchService
     {
         private readonly IMatchRepository matchRepository;
         private readonly IUserRepository userRepository;
-        private readonly MusicProfileService musicProfileService;
+        private readonly IMusicProfileService musicProfileService;
         private readonly IMapper mapper;
-        public MatchService(IMatchRepository matchRepository, IUserRepository userRepository, MusicProfileService musicProfileService, IMapper mapper)
+        public MatchService(IMatchRepository matchRepository, IUserRepository userRepository, IMusicProfileService musicProfileService, IMapper mapper)
         {
             this.matchRepository = matchRepository;
             this.userRepository = userRepository;
