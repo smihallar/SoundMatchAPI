@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SoundMatchAPI.Models;
+using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data
 {
@@ -9,7 +9,6 @@ namespace SoundMatchAPI.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
-        public DbSet<User> Users { get; set; }
         public DbSet<Song> Songs { get; set; }
         public DbSet<Artist> Artists { get; set; }
         public DbSet<Genre> Genres { get; set; }

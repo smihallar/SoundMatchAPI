@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoundMatchAPI.Models
+namespace SoundMatchAPI.Data.Models
 {
     public class Message
     {
@@ -9,10 +9,10 @@ namespace SoundMatchAPI.Models
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
 
         // Navigational properties
-        public string SenderId { get; set; }
-        public User Sender { get; set; }
+        public string SenderId { get; set; } = string.Empty;
+        public User Sender { get; set; } = new User();
 
-        public string ChatId { get; set; }
-        public Chat Chat { get; set; }
+        public string ChatId { get; set; } = string.Empty;
+        public Chat Chat { get; set; } = new Chat();
     }
 }

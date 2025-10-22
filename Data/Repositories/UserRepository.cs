@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoundMatchAPI.Models;
+using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data.Repositories
 {
-    public class UserRepository : GenericRepository<User>
+    public class UserRepository : GenericRepository<User>, IUserRepository
     {
         private readonly ApplicationDbContext ctx;
         public UserRepository(ApplicationDbContext ctx) : base(ctx)
@@ -11,28 +12,22 @@ namespace SoundMatchAPI.Data.Repositories
             this.ctx = ctx;
         }
 
-        public async Task<User?> GetUserWithDetailsAsync(string id)
-        {
-            return await ctx.Users
-                .Include(u => u.FavoriteSongs)
-                    .ThenInclude(s => s.Artists)
-                        .ThenInclude(a => a.Genres)
-                .Include(u => u.FavoriteArtists)
-                    .ThenInclude(a => a.Genres)
-                .Include(u => u.FavoriteGenres)
-                .FirstOrDefaultAsync(u => u.Id == id);
-        }
+        //public async Task<User?> GetUserWithDetailsAsync(string id)
+        //{
+        //    return await ctx.Users
+        //        .Include(u => u.FavoriteSongIds)
+        //        .Include(u => u.FavoriteArtistIds)
+        //        .Include(u => u.FavoriteGenreIds)
+        //        .FirstOrDefaultAsync(u => u.Id == id);
+        //}
 
-        public async Task<IEnumerable<User?>> GetAllUsersWithDetailsAsync()
-        {
-            return await ctx.Users
-                .Include(u => u.FavoriteSongs)
-                    .ThenInclude(s => s.Artists)
-                        .ThenInclude(a => a.Genres)
-                .Include(u => u.FavoriteArtists)
-                    .ThenInclude(a => a.Genres)
-                .Include(u => u.FavoriteGenres)
-                .ToListAsync();
-        }
+        //public async Task<IEnumerable<User?>> GetAllUsersWithDetailsAsync()
+        //{
+        //    return await ctx.Users
+        //        .Include(u => u.FavoriteSongIds)
+        //        .Include(u => u.FavoriteArtistIds)
+        //        .Include(u => u.FavoriteGenreIds)
+        //        .ToListAsync();
+        //}
     }
 }
