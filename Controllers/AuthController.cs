@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using SoundMatchAPI.Data.AuthModels;
 using SoundMatchAPI.Data.DTOs.Requests;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Services;
 
 namespace SoundMatchAPI.Controllers

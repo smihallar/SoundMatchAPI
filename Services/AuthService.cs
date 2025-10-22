@@ -3,7 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using SoundMatchAPI.Constants;
 using SoundMatchAPI.Data.AuthModels;
 using SoundMatchAPI.Data.DTOs.Requests;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

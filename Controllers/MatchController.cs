@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SoundMatchAPI.Data.Interfaces;
-using SoundMatchAPI.Services;
+using SoundMatchAPI.Constants;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using System.Net;
 
 namespace SoundMatchAPI.Controllers
@@ -19,10 +20,11 @@ namespace SoundMatchAPI.Controllers
 
         // GET: api/Match/{matchId}
         [HttpGet("{matchId}")]
+        [Authorize]
         public async Task<IActionResult> GetMatch(string matchId)
         {
-            var returnResponse = await matchService.GetMatchByIdWithDetailsAsync(matchId);
-
+            var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
+            var returnResponse = await matchService.GetMatchByIdWithDetailsAsync(matchId, loggedInUserId);
             switch (returnResponse.StatusCode)
             {
                 case HttpStatusCode.NotFound:
@@ -39,7 +41,12 @@ namespace SoundMatchAPI.Controllers
         [HttpPost("all/{userId}")]
         public async Task<IActionResult> FindMatches(string userId)
         {
-            var returnResponse = await matchService.AddMatches(userId);
+            var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
+            if (loggedInUserId == null)
+            {
+                return Forbid();
+            }
+            var returnResponse = await matchService.AddMatches(userId, loggedInUserId);
             switch (returnResponse.StatusCode)
             {
                 case HttpStatusCode.NotFound:
@@ -55,7 +62,12 @@ namespace SoundMatchAPI.Controllers
         [HttpGet("all/{userId}")]
         public async Task<IActionResult> GetAllMatches(string userId)
         {
-            var returnResponse = await matchService.GetMatchesByUserIdAsync(userId);
+            var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
+            if (loggedInUserId == null)
+            {
+                return Forbid();
+            }
+            var returnResponse = await matchService.GetMatchesByUserIdAsync(userId, loggedInUserId);
             switch (returnResponse.StatusCode)
             {
                 case HttpStatusCode.NotFound:
@@ -70,7 +82,12 @@ namespace SoundMatchAPI.Controllers
         [HttpDelete("{matchId}")]
         public async Task<IActionResult> DeleteMatch(string matchId)
         {
-            var returnResponse = await matchService.DeleteMatchAsync(matchId);
+            var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
+            if (loggedInUserId == null)
+            {
+                return Forbid();
+            }
+            var returnResponse = await matchService.DeleteMatchAsync(matchId, loggedInUserId);
             switch (returnResponse.StatusCode)
             {
                 case HttpStatusCode.NotFound:

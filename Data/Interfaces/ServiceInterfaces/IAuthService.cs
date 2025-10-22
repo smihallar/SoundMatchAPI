@@ -1,7 +1,7 @@
 ﻿using SoundMatchAPI.Data.AuthModels;
 using SoundMatchAPI.Data.DTOs.Requests;
 
-namespace SoundMatchAPI.Data.Interfaces
+namespace SoundMatchAPI.Data.Interfaces.ServiceInterfaces
 {
     public interface IAuthService
     {

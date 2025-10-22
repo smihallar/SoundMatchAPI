@@ -2,7 +2,8 @@
 using Azure;
 using SoundMatchAPI.Data.DTOs.Requests;
 using SoundMatchAPI.Data.DTOs.Responses;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
 using System.Net;
 
@@ -131,39 +132,7 @@ namespace SoundMatchAPI.Services
             }
         }
 
-        // Connect to spotify (update user with spotify information + set IsConnectedToSpotify to true)
-        public async Task<ReturnResponse> ConnectUserToSpotifyAsync(string userId)
-        {
-            try
-            {
-                var user = await userRepository.GetByIdAsync(userId);
-                if (user == null)
-                {
-                    return new ReturnResponse
-                    {
-                        Message = "An error has occurred while fetching user",
-                        Errors = new List<string> { "User not found" },
-                        StatusCode = HttpStatusCode.BadRequest
-                    };
-                }
-                user.IsConnectedToSpotify = true;
-                await userRepository.UpdateAsync(user);
-                return new ReturnResponse
-                {
-                    StatusCode = HttpStatusCode.NoContent
-                };
-            }
-            catch (Exception ex)
-            {
-                return new ReturnResponse
-                {
-                    Message = "An error occurred while connecting user to Spotify",
-                    Errors = new List<string> { $"Error: {ex.Message}." },
-                    StatusCode = HttpStatusCode.InternalServerError
-                };
-            }
-        }
-
+       
         public async Task<ReturnResponse<UserProfileResponse>> GetUserProfileAsync(string userId)
         {
             try

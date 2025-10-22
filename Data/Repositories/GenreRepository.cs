@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
 using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data.Repositories

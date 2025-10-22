@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SoundMatchAPI.Constants;
 using SoundMatchAPI.Data.DTOs.Requests;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Services;
 using System.Net;
 

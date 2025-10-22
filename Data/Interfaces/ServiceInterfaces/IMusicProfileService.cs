@@ -1,6 +1,6 @@
 ﻿using SoundMatchAPI.Data.DomainModels;
 
-namespace SoundMatchAPI.Data.Interfaces
+namespace SoundMatchAPI.Data.Interfaces.ServiceInterfaces
 {
     public interface IMusicProfileService
     {

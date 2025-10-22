@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using SoundMatchAPI.Data.DTOs.Responses;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
 using SoundMatchAPI.Data.Repositories;
 using System.Net;
@@ -20,7 +21,7 @@ namespace SoundMatchAPI.Services
             this.musicProfileService = musicProfileService;
             this.mapper = mapper;
         }
-        public async Task<ReturnResponse<MatchResponse>> GetMatchByIdWithDetailsAsync(string matchId)
+        public async Task<ReturnResponse<MatchResponse>> GetMatchByIdWithDetailsAsync(string matchId, string loggedInUserId)
         {
             try
             {
@@ -32,6 +33,15 @@ namespace SoundMatchAPI.Services
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "An error occurred while fetching match.",
                         Errors = new List<string> { "No match found." }
+                    };
+                }
+                if(match.InitiatorUserId != loggedInUserId && match.RecipientUserId != loggedInUserId)
+                {
+                    return new ReturnResponse<MatchResponse>
+                    {
+                        Message = "An error has occurred while fetching match.",
+                        Errors = new List<string> { "User is not authorized to access this resource." },
+                        StatusCode = HttpStatusCode.Forbidden
                     };
                 }
                 var matchResponse = mapper.Map<MatchResponse>(match);
@@ -66,10 +76,19 @@ namespace SoundMatchAPI.Services
             return 9;
         }
 
-        public async Task<ReturnResponse<IEnumerable<MatchResponse>>> AddMatches(string userId)
+        public async Task<ReturnResponse<IEnumerable<MatchResponse>>> AddMatches(string userId, string loggedInUserId)
         {
             try
             {
+                if(userId != loggedInUserId)
+                {
+                    return new ReturnResponse<IEnumerable<MatchResponse>>
+                    {
+                        Message = "An error has occurred while creating matches.",
+                        Errors = new List<string> { "User is not authorized to create these resources." },
+                        StatusCode = HttpStatusCode.Forbidden
+                    };
+                }
                 var allUsers = await userRepository.GetAllAsync(); // Get all users to find matches
                 var initiatorUser = await userRepository.GetByIdAsync(userId); // Get user object for whom to find matches
 
@@ -167,10 +186,19 @@ namespace SoundMatchAPI.Services
             }
         }
 
-        public async Task<ReturnResponse<IEnumerable<MatchResponse>>> GetMatchesByUserIdAsync(string userId)
+        public async Task<ReturnResponse<IEnumerable<MatchResponse>>> GetMatchesByUserIdAsync(string userId, string loggedInUserId)
         {
             try
             {
+                if(userId != loggedInUserId)
+                {
+                    return new ReturnResponse<IEnumerable<MatchResponse>>
+                    {
+                        Message = "An error has occurred while fetching matches.",
+                        Errors = new List<string> { "User is not authorized to access these resources." },
+                        StatusCode = HttpStatusCode.Forbidden
+                    };
+                }
                 var matches = await matchRepository.GetMatchesWithDetailsByUserIdAsync(userId);
                 if (matches == null || !matches.Any())
                 {
@@ -202,7 +230,7 @@ namespace SoundMatchAPI.Services
             }
         }
 
-        public async Task<ReturnResponse> DeleteMatchAsync (string matchId)
+        public async Task<ReturnResponse> DeleteMatchAsync (string matchId, string loggedInUserId)
         {
             try
             {
@@ -214,6 +242,15 @@ namespace SoundMatchAPI.Services
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "Match not found.",
                         Errors = new List<string> { "No match found to delete." }
+                    };
+                }
+                if(match.InitiatorUserId != loggedInUserId && match.RecipientUserId != loggedInUserId)
+                {
+                    return new ReturnResponse
+                    {
+                        Message = "An error has occurred while deleting the match.",
+                        Errors = new List<string> { "User is not authorized to delete this resource." },
+                        StatusCode = HttpStatusCode.Forbidden
                     };
                 }
                 await matchRepository.DeleteAsync(matchId);

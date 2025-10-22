@@ -1,6 +1,6 @@
 ﻿using SoundMatchAPI.Data.Models;
 
-namespace SoundMatchAPI.Data.Interfaces
+namespace SoundMatchAPI.Data.Interfaces.RepositoryInterfaces
 {
     public interface IUserRepository : IRepository<User>
     {

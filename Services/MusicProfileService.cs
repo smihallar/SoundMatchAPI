@@ -1,5 +1,6 @@
 ﻿using SoundMatchAPI.Data.DomainModels;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Repositories;
 
 namespace SoundMatchAPI.Services
