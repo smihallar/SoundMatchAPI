@@ -17,6 +17,8 @@ namespace SoundMatchAPI.Data.Models
         public bool IsSynthetic { get; set; }
         public bool IsConnectedToSpotify { get; set; } // Indicates if the user has connected their Spotify account
         public DateTime MusicTasteLastRefreshed { get; set; } = DateTime.MinValue; // When the user's music taste was last refreshed from Spotify, stored to avoid excessive Spotify API calls
+        public DateTime UserDetailsLastRefreshed { get; set; } = DateTime.MinValue; // When the user's details were last refreshed from Spotify
+
         [ProtectedPersonalData]
         [PersonalData]
         public string? SpotifyRefreshToken { get; set; } // Refresh token for Spotify API, used to get new access tokens

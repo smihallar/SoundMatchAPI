@@ -13,13 +13,13 @@ namespace SoundMatchAPI.Data.Mappings
             CreateMap<User, UserResponse>()
                 .ForMember(
                     d => d.FavoriteSongIds,
-                    o => o.MapFrom(s => s.FavoriteSongs.Select(s => s.SongId).ToList()))
+                    o => o.MapFrom(s => s.FavoriteSongIds))
                 .ForMember(
                     d => d.FavoriteArtistIds,
-                    o => o.MapFrom(s => s.FavoriteArtists.Select(a => a.ArtistId).ToList()))
+                    o => o.MapFrom(s => s.FavoriteArtistIds))
                 .ForMember(
                     d => d.FavoriteGenreIds,
-                    o => o.MapFrom(s => s.FavoriteGenres.Select(g => g.GenreId).ToList())
+                    o => o.MapFrom(s => s.FavoriteGenreIds)
                 );
             // Mapping from UserCreateRequest (source) to User (destination)
             CreateMap<UserRegisterRequest, User>();

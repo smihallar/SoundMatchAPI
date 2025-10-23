@@ -34,7 +34,7 @@ namespace SoundMatchAPI.Controllers
                     return Ok(returnResponse);
             }
         }
-
+        // GET: api/User/{userId}
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserById(string userId)
         {

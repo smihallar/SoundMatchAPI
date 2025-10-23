@@ -26,5 +26,11 @@ namespace SoundMatchAPI.Data.Repositories
                 .Include(a => a.Genres)
                 .ToListAsync();
         }
+
+        public async Task<Artist?> GetBySpotifyIdAsync(string spotifyId)
+        {
+            return await ctx.Artists
+                .FirstOrDefaultAsync(a => a.SpotifyId == spotifyId);
+        }
     }
 }

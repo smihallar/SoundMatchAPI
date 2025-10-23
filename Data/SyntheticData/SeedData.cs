@@ -150,7 +150,8 @@ namespace SoundMatchAPI.Data.SyntheticData
                         FavoriteArtists = favoriteArtists,
                         FavoriteGenres = favoriteGenres,
                         FavoriteSongs = favoriteSongs,
-                        IsConnectedToSpotify = true
+                        IsConnectedToSpotify = true,
+                        MusicTasteLastRefreshed = DateTime.UtcNow
                     };
                     user.PasswordHash = hasher.HashPassword(user, "Synthetic123!");
                     ctx.Users.Add(user);

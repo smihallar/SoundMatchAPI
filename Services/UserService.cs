@@ -39,11 +39,9 @@ namespace SoundMatchAPI.Services
                         Errors = new List<string> { "No users found." }
                     };
                 }
-                var userResponses = new List<UserResponse>();
-                foreach (var user in users)
-                {
-                    mapper.Map(user, userResponses);
-                }
+                // Map each user to a UserResponse
+                var userResponses = users.Select(user => mapper.Map<UserResponse>(user)).ToList();
+
                 return new ReturnResponse<IEnumerable<UserResponse>>
                 {
                     Data = userResponses,

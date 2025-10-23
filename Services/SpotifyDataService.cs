@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+using SoundMatchAPI.Data.DomainModels;
 using SoundMatchAPI.Data.DTOs.Responses;
 using SoundMatchAPI.Data.DTOs.Responses.SpotifyAPIResponses;
 using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
 using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
 using System.Net;
+using System.Text.Json;
 
 namespace SoundMatchAPI.Services
 {
@@ -60,35 +62,71 @@ namespace SoundMatchAPI.Services
         {
             try
             {
+                var oneWeekAgo = DateTime.UtcNow.AddDays(-7);
+                if (user.MusicTasteLastRefreshed > oneWeekAgo) // Already refreshed within the last week
+                {
+                    return new ReturnResponse<UserProfileResponse>
+                    {
+                        StatusCode = HttpStatusCode.OK,
+                        Data = mapper.Map<UserProfileResponse>(user),
+                        Message = "User top items refreshed recently. You can refresh music taste once per week"
+                    };
+                }
                 // Fetch top artists
                 var artistsRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/artists?limit=20");
                 artistsRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 var artistsResponse = await httpClient.SendAsync(artistsRequest);
                 artistsResponse.EnsureSuccessStatusCode();
-                var topArtists = await artistsResponse.Content.ReadFromJsonAsync<SpotifyTopArtistsResponse>();
+
+                var artistsJson = await artistsResponse.Content.ReadAsStringAsync();
+                var topArtists = JsonSerializer.Deserialize<SpotifyTopArtistsResponse>(artistsJson, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
 
                 // Fetch top tracks
                 var tracksRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/tracks?limit=20");
                 tracksRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 var tracksResponse = await httpClient.SendAsync(tracksRequest);
                 tracksResponse.EnsureSuccessStatusCode();
-                var topTracks = await tracksResponse.Content.ReadFromJsonAsync<SpotifyTopTracksResponse>();
 
-                // Upsert music
-                if (topArtists?.Items != null) await musicService.UpsertArtistsAndGenresAsync(topArtists.Items);
-                if (topTracks?.Items != null) await musicService.UpsertTracksAsync(topTracks.Items);
+                var tracksJson = await tracksResponse.Content.ReadAsStringAsync();
+                var topTracks = JsonSerializer.Deserialize<SpotifyTopTracksResponse>(tracksJson, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
 
-                // Update user favorites
-                user.FavoriteArtists = topArtists?.Items.Select(a => musicService.GetOrCreateArtist(a)).ToList() ?? new List<Artist>();
-                user.FavoriteSongs = topTracks?.Items.Select(t => musicService.GetOrCreateSong(t)).ToList() ?? new List<Song>();
+                if (topArtists == null || topTracks == null)
+                {
+                    return new ReturnResponse<UserProfileResponse>
+                    {
+                        StatusCode = HttpStatusCode.InternalServerError,
+                        Message = "Error while fetching music data",
+                        Errors = new List<string> { "Top items data is null." }
+                    };
+                }
+                // Map spotify responses to models
+                var artists = mapper.Map<List<Artist>>(topArtists.Items);
+                var tracks = mapper.Map<List<Song>>(topTracks.Items);
+
+                // Collect genres from artists
+                var genres = artists.SelectMany(a => a.Genres).GroupBy(g => g.Name).Select(g => g.First()).ToList();
+
+                var musicProfile = new MusicProfile(tracks, artists, genres);
+                await musicService.SaveSpotifyMusicAsync(musicProfile);
+
+                // Update user entity
+                user.FavoriteArtists.AddRange(artists);
+                user.FavoriteArtistIds.AddRange(artists.Select(a => a.ArtistId));
+                user.FavoriteSongs.AddRange(tracks);
+                user.FavoriteSongIds.AddRange(tracks.Select(s => s.SongId));
+                user.FavoriteGenres.AddRange(genres);
+                user.FavoriteGenreIds.AddRange(genres.Select(g => g.GenreId));
                 user.MusicTasteLastRefreshed = DateTime.UtcNow;
 
                 await userRepository.UpdateAsync(user);
 
                 var userProfile = mapper.Map<UserProfileResponse>(user);
-                userProfile.FavoriteSongs = user.FavoriteSongs;
-                userProfile.FavoriteArtists = user.FavoriteArtists;
-                userProfile.FavoriteGenres = user.FavoriteGenres;
 
                 return new ReturnResponse<UserProfileResponse>
                 {
@@ -112,27 +150,38 @@ namespace SoundMatchAPI.Services
         {
             try
             {
+                var oneWeekAgo = DateTime.UtcNow.AddDays(-7);
+                if (user.UserDetailsLastRefreshed > oneWeekAgo) // Already refreshed within the last week
+                {
+                    return new ReturnResponse<UserProfileResponse>
+                    {
+                        StatusCode = HttpStatusCode.OK,
+                        Data = mapper.Map<UserProfileResponse>(user),
+                        Message = "User profile refreshed recently. You can refresh user details once per week"
+                    };
+                }
                 var request = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me");
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
                 var response = await httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 
-                var spotifyUser = await response.Content.ReadFromJsonAsync<SpotifyUserResponse>();
+                var spotifyUserJson = await response.Content.ReadAsStringAsync();
+                var spotifyUser = JsonSerializer.Deserialize<SpotifyUserResponse>(spotifyUserJson, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
                 if (spotifyUser == null) throw new Exception("Failed to fetch Spotify user profile.");
 
                 // Update user entity
                 user.SpotifyUserId = spotifyUser.Id;
                 user.CountryCode = spotifyUser.Country;
                 user.ProfilePictureUrl = spotifyUser.Images?.FirstOrDefault()?.Url ?? string.Empty;
-                user.Biography = spotifyUser.Bio ?? string.Empty;
+                user.UserDetailsLastRefreshed = DateTime.UtcNow;
 
                 await userRepository.UpdateAsync(user);
 
                 var userProfile = mapper.Map<UserProfileResponse>(user);
-                userProfile.FavoriteSongs = user.FavoriteSongs;
-                userProfile.FavoriteArtists = user.FavoriteArtists;
-                userProfile.FavoriteGenres = user.FavoriteGenres;
 
                 return new ReturnResponse<UserProfileResponse>
                 {

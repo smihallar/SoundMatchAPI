@@ -6,6 +6,7 @@ using SoundMatchAPI.Data.Models;
 using SoundMatchAPI.Data.Repositories;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 
 namespace SoundMatchAPI.Services
 {
@@ -46,9 +47,13 @@ namespace SoundMatchAPI.Services
                 var response = await httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 
-                // 3️⃣ Deserialize the token response
-                var token = await response.Content.ReadFromJsonAsync<SpotifyTokenResponse>()
-                            ?? throw new Exception("Failed to get tokens from Spotify.");
+                var json = await response.Content.ReadAsStringAsync();
+
+                var token = JsonSerializer.Deserialize<SpotifyTokenResponse>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? throw new Exception("Failed to deserialize Spotify token response");
+
 
                 // 4️⃣ Store tokens and update user
                 await userRepository.UpdateUserWithSpotifyAuthDetailsAsync(user.Id, token.RefreshToken!, DateTime.UtcNow.AddSeconds(token.ExpiresIn));
@@ -93,9 +98,11 @@ namespace SoundMatchAPI.Services
                 var response = await httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 
-                var token = await response.Content.ReadFromJsonAsync<SpotifyTokenResponse>()
-                            ?? throw new Exception("Failed to refresh Spotify token.");
-
+                var json = await response.Content.ReadAsStringAsync();
+                var token = JsonSerializer.Deserialize<SpotifyTokenResponse>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
                 return new ReturnResponse<string>
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -116,22 +123,44 @@ namespace SoundMatchAPI.Services
 
 
         // Generates the Spotify authorization URL, including client ID, redirect URI and scopes from configuration
-        public string GetAuthorizationUrl()
+        public async Task<ReturnResponse<string>> GetAuthorizationUrl()
         {
-            var clientId = config["Spotify:ClientId"] ?? string.Empty;
-            var redirectUri = Uri.EscapeDataString(config["Spotify:RedirectUri"] ?? string.Empty);
-            var scopes = Uri.EscapeDataString(config["Spotify:Scopes"] ?? string.Empty);
-            var state = Guid.NewGuid().ToString(); // Unique state parameter for CSRF protection
+            try
+            {
+                var clientId = config["Spotify:ClientId"] ?? string.Empty;
+                var redirectUri = Uri.EscapeDataString(config["Spotify:RedirectUri"] ?? string.Empty);
+                var scopes = Uri.EscapeDataString(config["Spotify:Scopes"] ?? string.Empty);
+                var state = Guid.NewGuid().ToString(); // Unique state for CSRF protection
 
-            // To ensure the user is prompted to re-authorize each time
-            var showDialog = "true";
+                // Force Spotify to show the login/authorization dialog
+                var showDialog = "true";
 
-            return $"https://accounts.spotify.com/authorize?response_type=code" +
-                   $"&client_id={clientId}" +
-                   $"&scope={scopes}" +
-                   $"&redirect_uri={redirectUri}" +
-                   $"&state={state}" +
-                   $"&show_dialog={showDialog}";
+                var url = $"https://accounts.spotify.com/authorize?response_type=code" +
+                          $"&client_id={clientId}" +
+                          $"&scope={scopes}" +
+                          $"&redirect_uri={redirectUri}" +
+                          $"&state={state}" +
+                          $"&show_dialog={showDialog}";
+
+                // Add an artificial await to avoid CS1998
+                await Task.CompletedTask;
+
+                return new ReturnResponse<string>
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Data = url,
+                    Message = "Spotify authorization URL generated successfully."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ReturnResponse<string>
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    Message = "Failed to generate Spotify authorization URL.",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
         }
     }
 }
