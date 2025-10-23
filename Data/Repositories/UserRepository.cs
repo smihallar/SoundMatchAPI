@@ -12,22 +12,15 @@ namespace SoundMatchAPI.Data.Repositories
             this.ctx = ctx;
         }
 
-        //public async Task<User?> GetUserWithDetailsAsync(string id)
-        //{
-        //    return await ctx.Users
-        //        .Include(u => u.FavoriteSongIds)
-        //        .Include(u => u.FavoriteArtistIds)
-        //        .Include(u => u.FavoriteGenreIds)
-        //        .FirstOrDefaultAsync(u => u.Id == id);
-        //}
-
-        //public async Task<IEnumerable<User?>> GetAllUsersWithDetailsAsync()
-        //{
-        //    return await ctx.Users
-        //        .Include(u => u.FavoriteSongIds)
-        //        .Include(u => u.FavoriteArtistIds)
-        //        .Include(u => u.FavoriteGenreIds)
-        //        .ToListAsync();
-        //}
+        public async Task UpdateUserSpotifyStatusAsync(string userId, bool isConnectedToSpotify)
+        {
+            var user = await ctx.Users.FindAsync(userId);
+            if (user != null)
+            {
+                user.IsConnectedToSpotify = isConnectedToSpotify;
+                ctx.Users.Update(user);
+                await ctx.SaveChangesAsync();
+            }
+        }
     }
 }

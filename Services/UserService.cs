@@ -60,14 +60,14 @@ namespace SoundMatchAPI.Services
                 };
             }
         }
-        public async Task<ReturnResponse<UserResponse?>> GetUserByIdAsync(string id)
+        public async Task<ReturnResponse<UserResponse>> GetUserByIdAsync(string id)
         {
             try
             {
                 var user = await userRepository.GetByIdAsync(id);
                 if (user == null)
                 {
-                    return new ReturnResponse<UserResponse?>
+                    return new ReturnResponse<UserResponse>
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "An error occurred while fetching user.",
@@ -75,7 +75,7 @@ namespace SoundMatchAPI.Services
                     };
                 }
                 var userResponse = mapper.Map<UserResponse>(user);
-                return new ReturnResponse<UserResponse?>
+                return new ReturnResponse<UserResponse>
                 {
                     StatusCode = HttpStatusCode.OK,
                     Data = userResponse,
@@ -83,7 +83,7 @@ namespace SoundMatchAPI.Services
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<UserResponse?>
+                return new ReturnResponse<UserResponse>
                 {
                     Message = "Ett oväntat fel har inträffat.",
                     Errors = new List<string> { $"Error: {ex.Message}" },
