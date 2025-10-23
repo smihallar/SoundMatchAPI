@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SoundMatchAPI.Data.DTOs.Responses
+namespace SoundMatchAPI.Data.DTOs.Responses.SpotifyAPIResponses
 {
     public class SpotifyImageResponse // Image info from Spotify API (artist or album images)
     {

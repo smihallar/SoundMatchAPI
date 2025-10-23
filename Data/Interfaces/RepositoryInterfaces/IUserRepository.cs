@@ -4,6 +4,6 @@ namespace SoundMatchAPI.Data.Interfaces.RepositoryInterfaces
 {
     public interface IUserRepository : IRepository<User>
     {
-       Task UpdateUserSpotifyStatusAsync(string userId, bool isConnectedToSpotify);
+        Task UpdateUserWithSpotifyAuthDetailsAsync(string userId, string? refreshToken, DateTime? tokenExpiresAt);
     }
 }

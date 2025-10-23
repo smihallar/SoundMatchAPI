@@ -2,9 +2,10 @@
 
 namespace SoundMatchAPI.Data.Interfaces.ServiceInterfaces
 {
-    public interface IMusicProfileService
+    public interface IMusicService
     {
         Task<MusicProfile> GetProfileAsync(List<string> favoriteSongIds, List<string> favoriteArtistIds,
             List<string> favoriteGenreIds);
+        Task SaveSpotifyMusicAsync(MusicProfile profile);
     }
 }

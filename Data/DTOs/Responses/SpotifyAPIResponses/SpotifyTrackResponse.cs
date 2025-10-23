@@ -1,7 +1,7 @@
 ﻿using SoundMatchAPI.Data.Models;
 using System.Text.Json.Serialization;
 
-namespace SoundMatchAPI.Data.DTOs.Responses
+namespace SoundMatchAPI.Data.DTOs.Responses.SpotifyAPIResponses
 {
     public class SpotifyTrackResponse // Top tracks from Spotify API
     {

@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using SoundMatchAPI.Data.DTOs.Responses;
+using SoundMatchAPI.Data.DTOs.Responses.SpotifyAPIResponses;
 using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data.Mappings

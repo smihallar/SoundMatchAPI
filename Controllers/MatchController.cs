@@ -24,6 +24,10 @@ namespace SoundMatchAPI.Controllers
         public async Task<IActionResult> GetMatch(string matchId)
         {
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
+            if (loggedInUserId == null)
+            {
+                return Forbid();
+            }
             var returnResponse = await matchService.GetMatchByIdWithDetailsAsync(matchId, loggedInUserId);
             switch (returnResponse.StatusCode)
             {
@@ -39,6 +43,7 @@ namespace SoundMatchAPI.Controllers
         // Find and create new matches for a user
         // POST: api/Match/all/{userId}
         [HttpPost("all/{userId}")]
+        [Authorize]
         public async Task<IActionResult> FindMatches(string userId)
         {
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
@@ -49,6 +54,8 @@ namespace SoundMatchAPI.Controllers
             var returnResponse = await matchService.AddMatches(userId, loggedInUserId);
             switch (returnResponse.StatusCode)
             {
+                case HttpStatusCode.Forbidden:
+                    return Forbid();
                 case HttpStatusCode.NotFound:
                     return NotFound(returnResponse);
                 case HttpStatusCode.InternalServerError:
@@ -60,6 +67,7 @@ namespace SoundMatchAPI.Controllers
 
         // GET: api/Match/all/{userId}   
         [HttpGet("all/{userId}")]
+        [Authorize]
         public async Task<IActionResult> GetAllMatches(string userId)
         {
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
@@ -70,6 +78,8 @@ namespace SoundMatchAPI.Controllers
             var returnResponse = await matchService.GetMatchesByUserIdAsync(userId, loggedInUserId);
             switch (returnResponse.StatusCode)
             {
+                case HttpStatusCode.Forbidden:
+                    return Forbid();
                 case HttpStatusCode.NotFound:
                     return NotFound(returnResponse);
                 case HttpStatusCode.InternalServerError:
@@ -80,6 +90,7 @@ namespace SoundMatchAPI.Controllers
         }
 
         [HttpDelete("{matchId}")]
+        [Authorize]
         public async Task<IActionResult> DeleteMatch(string matchId)
         {
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
@@ -90,6 +101,8 @@ namespace SoundMatchAPI.Controllers
             var returnResponse = await matchService.DeleteMatchAsync(matchId, loggedInUserId);
             switch (returnResponse.StatusCode)
             {
+                case HttpStatusCode.Forbidden:
+                    return Forbid();
                 case HttpStatusCode.NotFound:
                     return NotFound(returnResponse);
                 case HttpStatusCode.InternalServerError:

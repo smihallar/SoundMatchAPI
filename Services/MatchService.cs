@@ -12,13 +12,13 @@ namespace SoundMatchAPI.Services
     {
         private readonly IMatchRepository matchRepository;
         private readonly IUserRepository userRepository;
-        private readonly IMusicProfileService musicProfileService;
+        private readonly IMusicService musicService;
         private readonly IMapper mapper;
-        public MatchService(IMatchRepository matchRepository, IUserRepository userRepository, IMusicProfileService musicProfileService, IMapper mapper)
+        public MatchService(IMatchRepository matchRepository, IUserRepository userRepository, IMusicService musicService, IMapper mapper)
         {
             this.matchRepository = matchRepository;
             this.userRepository = userRepository;
-            this.musicProfileService = musicProfileService;
+            this.musicService = musicService;
             this.mapper = mapper;
         }
         public async Task<ReturnResponse<MatchResponse>> GetMatchByIdWithDetailsAsync(string matchId, string loggedInUserId)
@@ -110,12 +110,12 @@ namespace SoundMatchAPI.Services
                     if (candidate.IsConnectedToSpotify == false) continue; // Skip if candidate is not connected to Spotify
 
                     // Get music profiles for both users, based on their favorite songs, artists, genres
-                    var candidateProfile = await musicProfileService.GetProfileAsync(
+                    var candidateProfile = await musicService.GetProfileAsync(
                         candidate.FavoriteSongIds ?? new List<string>(),
                         candidate.FavoriteArtistIds ?? new List<string>(),
                         candidate.FavoriteGenreIds ?? new List<string>());
 
-                    var initiatorProfile = await musicProfileService.GetProfileAsync(
+                    var initiatorProfile = await musicService.GetProfileAsync(
                         initiatorUser.FavoriteSongIds ?? new List<string>(),
                         initiatorUser.FavoriteArtistIds ?? new List<string>(),
                         initiatorUser.FavoriteGenreIds ?? new List<string>());

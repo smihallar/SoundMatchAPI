@@ -12,14 +12,14 @@ namespace SoundMatchAPI.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository userRepository;
-        private readonly IMusicProfileService musicProfileService;
+        private readonly IMusicService musicService;
         private readonly IMatchRepository matchRepository;
         private readonly IMapper mapper;
 
-        public UserService(IUserRepository userRepository, IMusicProfileService musicProfileService, IMatchRepository matchRepository, IMapper mapper)
+        public UserService(IUserRepository userRepository, IMusicService musicService, IMatchRepository matchRepository, IMapper mapper)
         {
             this.userRepository = userRepository;
-            this.musicProfileService = musicProfileService;
+            this.musicService = musicService;
             this.matchRepository = matchRepository;
             this.mapper = mapper;
         }
@@ -148,7 +148,7 @@ namespace SoundMatchAPI.Services
                     };
                 }
 
-                var musicProfile = await musicProfileService.GetProfileAsync(user.FavoriteSongIds, user.FavoriteArtistIds, user.FavoriteGenreIds); // Get current music profile
+                var musicProfile = await musicService.GetProfileAsync(user.FavoriteSongIds, user.FavoriteArtistIds, user.FavoriteGenreIds); // Get current music profile
                 user.FavoriteSongs = musicProfile.Songs.ToList();
                 user.FavoriteArtists = musicProfile.Artists.ToList();
                 user.FavoriteGenres = musicProfile.Genres.ToList();

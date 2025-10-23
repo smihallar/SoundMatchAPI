@@ -12,12 +12,14 @@ namespace SoundMatchAPI.Data.Repositories
             this.ctx = ctx;
         }
 
-        public async Task UpdateUserSpotifyStatusAsync(string userId, bool isConnectedToSpotify)
+        public async Task UpdateUserWithSpotifyAuthDetailsAsync(string userId, string? refreshToken, DateTime? tokenExpiresAt)
         {
             var user = await ctx.Users.FindAsync(userId);
             if (user != null)
             {
-                user.IsConnectedToSpotify = isConnectedToSpotify;
+                user.IsConnectedToSpotify = true;
+                user.SpotifyRefreshToken = refreshToken;
+                user.SpotifyTokenExpiresAt = tokenExpiresAt;
                 ctx.Users.Update(user);
                 await ctx.SaveChangesAsync();
             }

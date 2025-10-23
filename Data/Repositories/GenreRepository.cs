@@ -18,5 +18,11 @@ namespace SoundMatchAPI.Data.Repositories
                 .Where(g => genreIds.Contains(g.GenreId))
                 .ToListAsync();
         }
+
+        public async Task<Genre?> GetByNameAsync(string name) // Used to compare to JSON from Spotify
+        {
+            return await ctx.Genres
+                .FirstOrDefaultAsync(g => g.Name.ToLower() == name.ToLower());
+        }
     }
 }

@@ -6,5 +6,6 @@ namespace SoundMatchAPI.Data.Interfaces.RepositoryInterfaces
     {
         Task<Song?> GetSongWithDetailsAsync(string id);
         Task<IEnumerable<Song?>> GetSongsWithDetailsByIdsAsync(IEnumerable<string> songIds);
+        Task<Song?> GetBySpotifyIdAsync(string spotifyId);
     }
 }

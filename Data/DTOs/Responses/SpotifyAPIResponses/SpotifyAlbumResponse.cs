@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SoundMatchAPI.Data.DTOs.Responses
+namespace SoundMatchAPI.Data.DTOs.Responses.SpotifyAPIResponses
 {
     public class SpotifyAlbumResponse // Album info from Spotify API (song's album)
     {
