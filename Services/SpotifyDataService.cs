@@ -72,8 +72,8 @@ namespace SoundMatchAPI.Services
                         Message = "User top items refreshed recently. You can refresh music taste once per week"
                     };
                 }
-                // Fetch top artists
-                var artistsRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/artists?limit=20");
+                // Fetch top 50 artists, long term (1 year)
+                var artistsRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=50&offset=0");
                 artistsRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 var artistsResponse = await httpClient.SendAsync(artistsRequest);
                 artistsResponse.EnsureSuccessStatusCode();
@@ -84,8 +84,8 @@ namespace SoundMatchAPI.Services
                     PropertyNameCaseInsensitive = true
                 });
 
-                // Fetch top tracks
-                var tracksRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/tracks?limit=20");
+                // Fetch top 50 tracks, long term (1 year)
+                var tracksRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/tracks?time_range=long_term&limit=50&offset=0");
                 tracksRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 var tracksResponse = await httpClient.SendAsync(tracksRequest);
                 tracksResponse.EnsureSuccessStatusCode();

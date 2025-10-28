@@ -46,12 +46,12 @@ namespace SoundMatchAPI.Controllers
         [HttpGet("callback")]
         public async Task<IActionResult> Callback([FromQuery] string code, [FromQuery] string state)
         {
-            var user = await userManager.FindByIdAsync("56a8ab6f-bca7-4094-9d33-84d7253a6894");
+            var user = await userManager.GetUserAsync(User);
             if (user == null)
             {
                 return Forbid();
             }
-            var tokenResponse = await spotifyAuthService.ExchangeCodeAndStoreTokensAsync(user,code);
+            var tokenResponse = await spotifyAuthService.ExchangeCodeAndStoreTokensAsync(user, code);
             if (tokenResponse.StatusCode != HttpStatusCode.OK)
                 return StatusCode((int)tokenResponse.StatusCode, tokenResponse);
             var returnResponse = await spotifyDataService.ConnectSpotifyAndPopulateMusicAsync(user, tokenResponse.Data!);

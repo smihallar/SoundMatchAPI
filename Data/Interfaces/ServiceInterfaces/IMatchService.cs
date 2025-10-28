@@ -8,6 +8,5 @@ namespace SoundMatchAPI.Data.Interfaces.ServiceInterfaces
         Task<ReturnResponse<IEnumerable<MatchResponse>>> AddMatches(string userId, string loggedInUserId);
         Task<ReturnResponse<IEnumerable<MatchResponse>>> GetMatchesByUserIdAsync(string userId, string loggedInUserId);
         Task<ReturnResponse> DeleteMatchAsync(string matchId, string loggedInUserId);
-
     }
 }

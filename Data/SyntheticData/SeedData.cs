@@ -123,17 +123,17 @@ namespace SoundMatchAPI.Data.SyntheticData
                 await ctx.SaveChangesAsync();
 
                 // Create synthetic users
-                for (int i = 0; i < 150; i++)
+                for (int i = 0; i < 50; i++)
                 {
                     // Select favorite artists, genres, and songs
-                    var favoriteArtists = artistList.OrderBy(_ => Guid.NewGuid()).Take(25).ToList();
+                    var favoriteArtists = artistList.OrderBy(_ => Guid.NewGuid()).Take(30).ToList();
                     var favoriteGenres = artistList
                         .SelectMany(a => a.Genres)
                         .Distinct()
                         .OrderBy(_ => Guid.NewGuid())
                         .Take(10)
                         .ToList();
-                    var favoriteSongs = songs.OrderBy(_ => Guid.NewGuid()).Take(60).ToList();
+                    var favoriteSongs = songs.OrderBy(_ => Guid.NewGuid()).Take(50).ToList();
 
                     var user = new User
                     {

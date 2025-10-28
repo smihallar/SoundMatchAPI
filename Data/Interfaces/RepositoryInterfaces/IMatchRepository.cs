@@ -8,5 +8,6 @@ namespace SoundMatchAPI.Data.Interfaces.RepositoryInterfaces
         Task<Match?> GetMatchWithDetailsByIdAsync(string matchId);
         Task AddMatchesAsync(IEnumerable<Match> matches);
         Task DeleteMatchesByUserIdAsync(string userId);
+        Task<Match?> GetExistingMatchAsync(string initiatorId, string recipientId);
     }
 }

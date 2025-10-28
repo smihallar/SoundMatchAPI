@@ -50,6 +50,30 @@ namespace SoundMatchAPI.Controllers
             }
         }
 
+        // PUT: api/User/bio/{userId}
+        [HttpPut("bio/{userId}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateUserBio(string userId, [FromBody] UpdateUserBioRequest request)
+        {
+            var uId = User.FindFirst(CustomClaimTypes.Uid)?.Value; // Id of user that is logged in
+            if (uId == null)
+            {
+                return Forbid();
+            }
+            var returnResponse = await userService.UpdateUserBioAsync(userId, request.Bio, uId);
+            switch (returnResponse.StatusCode)
+            {
+                case HttpStatusCode.Forbidden:
+                    return StatusCode(StatusCodes.Status403Forbidden, returnResponse);
+                case HttpStatusCode.NotFound:
+                    return NotFound();
+                case HttpStatusCode.InternalServerError:
+                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
+                default:
+                    return Ok(returnResponse);
+            }
+        }
+
         [HttpDelete("{userId}")]
         [Authorize]
         public async Task<IActionResult> DeleteUser(string userId)

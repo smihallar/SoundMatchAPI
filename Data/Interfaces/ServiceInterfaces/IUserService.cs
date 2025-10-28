@@ -8,6 +8,6 @@ namespace SoundMatchAPI.Data.Interfaces.ServiceInterfaces
         Task<ReturnResponse<UserResponse>> GetUserByIdAsync(string userId);
         Task<ReturnResponse> DeleteUserAsync(string userId, string loggedInUserId);
         Task<ReturnResponse<UserProfileResponse>> GetUserProfileAsync(string userId);
-
+        Task<ReturnResponse> UpdateUserBioAsync(string userId, string bio, string loggedInUserId);
     }
 }

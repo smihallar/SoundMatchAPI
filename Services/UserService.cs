@@ -168,5 +168,46 @@ namespace SoundMatchAPI.Services
                 };
             }
         }
+
+        public async Task<ReturnResponse> UpdateUserBioAsync(string userId, string bio, string loggedInUserId)
+        {
+            try
+            {
+                if (userId != loggedInUserId)
+                {
+                    return new ReturnResponse
+                    {
+                        Message = "An error has occurred while updating user bio.",
+                        Errors = new List<string> { "User is not authorized to update this resource." },
+                        StatusCode = HttpStatusCode.Forbidden
+                    };
+                }
+                var user = await userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    return new ReturnResponse
+                    {
+                        StatusCode = HttpStatusCode.NotFound,
+                        Message = "User not found",
+                        Errors = new List<string> { "No user found." }
+                    };
+                }
+                user.Biography = bio;
+                await userRepository.UpdateAsync(user);
+                return new ReturnResponse
+                {
+                    StatusCode = HttpStatusCode.NoContent
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ReturnResponse
+                {
+                    Message = "An unexpected error occurred.",
+                    Errors = new List<string> { $"Error: {ex.Message}" },
+                    StatusCode = HttpStatusCode.InternalServerError
+                };
+            }
+        }
     }
 }

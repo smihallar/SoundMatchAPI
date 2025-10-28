@@ -25,9 +25,9 @@ namespace SoundMatchAPI
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", policy =>
+                options.AddPolicy("AllowLocalhostClient", policy =>
                 {
-                    policy.AllowAnyOrigin() // Update to client port
+                    policy.WithOrigins("https://localhost:7243") // Blazor-client port
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
@@ -38,33 +38,6 @@ namespace SoundMatchAPI
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(options =>
-            {
-                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "Bearer",
-                    BearerFormat = "JWT",
-                    In = ParameterLocation.Header,
-                    Description = "Enter 'Bearer' [space] and then your valid token in the text input below.\nExample: \"Bearer eyJhbGciOiJIUzI1NiIs...\""
-                });
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        new string[] {}
-                    }
-                });
-            });
-
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -127,7 +100,7 @@ namespace SoundMatchAPI
             }
             app.UseHttpsRedirection();
 
-            app.UseCors("AllowAll");
+            app.UseCors("AllowLocalHostClient");
 
             app.UseAuthentication();
             app.UseAuthorization();
