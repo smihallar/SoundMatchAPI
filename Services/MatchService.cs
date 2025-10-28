@@ -76,13 +76,13 @@ namespace SoundMatchAPI.Services
             return 9;
         }
 
-        public async Task<ReturnResponse<IEnumerable<MatchResponse>>> AddMatches(string userId, string loggedInUserId)
+        public async Task<ReturnResponse<List<MatchResponse>>> AddMatches(string userId, string loggedInUserId)
         {
             try
             {
                 if (userId != loggedInUserId)
                 {
-                    return new ReturnResponse<IEnumerable<MatchResponse>>
+                    return new ReturnResponse<List<MatchResponse>>
                     {
                         Message = "An error has occurred while creating matches.",
                         Errors = new List<string> { "User is not authorized to create these resources." },
@@ -94,7 +94,7 @@ namespace SoundMatchAPI.Services
 
                 if (initiatorUser == null || allUsers == null)
                 {
-                    return new ReturnResponse<IEnumerable<MatchResponse>>
+                    return new ReturnResponse<List<MatchResponse>>
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "User(s) not found.",
@@ -139,7 +139,7 @@ namespace SoundMatchAPI.Services
                 var allMatchesForResponse = newMatches.Concat(updatedMatches).ToList();
                 var matchResponses = allMatchesForResponse.Select(m => mapper.Map<MatchResponse>(m)).ToList();
 
-                return new ReturnResponse<IEnumerable<MatchResponse>>
+                return new ReturnResponse<List<MatchResponse>>
                 {
                     StatusCode = HttpStatusCode.OK,
                     Data = matchResponses
@@ -147,7 +147,7 @@ namespace SoundMatchAPI.Services
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<IEnumerable<MatchResponse>>
+                return new ReturnResponse<List<MatchResponse>>
                 {
                     Message = "An error has occurred while creating matches.",
                     Errors = new List<string> { ex.Message },
@@ -258,13 +258,13 @@ namespace SoundMatchAPI.Services
             };
         }
 
-        public async Task<ReturnResponse<IEnumerable<MatchResponse>>> GetMatchesByUserIdAsync(string userId, string loggedInUserId)
+        public async Task<ReturnResponse<List<MatchResponse>>> GetMatchesByUserIdAsync(string userId, string loggedInUserId)
         {
             try
             {
                 if (userId != loggedInUserId)
                 {
-                    return new ReturnResponse<IEnumerable<MatchResponse>>
+                    return new ReturnResponse<List<MatchResponse>>
                     {
                         Message = "An error has occurred while fetching matches.",
                         Errors = new List<string> { "User is not authorized to access these resources." },
@@ -274,7 +274,7 @@ namespace SoundMatchAPI.Services
                 var matches = await matchRepository.GetMatchesWithDetailsByUserIdAsync(userId);
                 if (matches == null || !matches.Any())
                 {
-                    return new ReturnResponse<IEnumerable<MatchResponse>>
+                    return new ReturnResponse<List<MatchResponse>>
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "No matches found for the user.",
@@ -285,7 +285,7 @@ namespace SoundMatchAPI.Services
                     .Where(m => m != null)
                     .Select(m => mapper.Map<MatchResponse>(m))
                     .ToList();
-                return new ReturnResponse<IEnumerable<MatchResponse>>
+                return new ReturnResponse<List<MatchResponse>>
                 {
                     StatusCode = HttpStatusCode.OK,
                     Data = matchResponses,
@@ -293,7 +293,7 @@ namespace SoundMatchAPI.Services
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<IEnumerable<MatchResponse>>
+                return new ReturnResponse<List<MatchResponse>>
                 {
                     Message = "An unexpected error has occurred.",
                     Errors = new List<string> { $"Error: {ex.Message}" },

@@ -22,7 +22,7 @@ namespace SoundMatchAPI.Services
             this.config = config;
         }
 
-        public async Task<ReturnResponse<string>> ExchangeCodeAndStoreTokensAsync(User user, string code)
+        public async Task<ReturnResponse<SpotifyTokenResponse>> ExchangeCodeAndStoreTokensAsync(User user, string code)
         {
             try
             {
@@ -59,16 +59,16 @@ namespace SoundMatchAPI.Services
                 await userRepository.UpdateUserWithSpotifyAuthDetailsAsync(user.Id, token.RefreshToken!, DateTime.UtcNow.AddSeconds(token.ExpiresIn));
 
                 // 5️⃣ Return the access token in a standardized response
-                return new ReturnResponse<string>
+                return new ReturnResponse<SpotifyTokenResponse>
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Data = token.AccessToken,
+                    Data = token,
                     Message = "Spotify tokens exchanged successfully."
                 };
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<string>
+                return new ReturnResponse<SpotifyTokenResponse>
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     Message = "Failed to exchange Spotify code.",
@@ -77,7 +77,7 @@ namespace SoundMatchAPI.Services
             }
         }
 
-        public async Task<ReturnResponse<string>> GetAccessTokenAsync(User user)
+        public async Task<ReturnResponse<SpotifyTokenResponse>> GetAccessTokenAsync(User user)
         {
             try
             {
@@ -103,15 +103,15 @@ namespace SoundMatchAPI.Services
                 {
                     PropertyNameCaseInsensitive = true
                 });
-                return new ReturnResponse<string>
+                return new ReturnResponse<SpotifyTokenResponse>
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Data = token.AccessToken
+                    Data = token
                 };
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<string>
+                return new ReturnResponse<SpotifyTokenResponse>
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     Message = "Failed to refresh Spotify token.",
@@ -123,7 +123,7 @@ namespace SoundMatchAPI.Services
 
 
         // Generates the Spotify authorization URL, including client ID, redirect URI and scopes from configuration
-        public async Task<ReturnResponse<string>> GetAuthorizationUrl()
+        public async Task<ReturnResponse<SpotifyAuthorizationUrlResponse>> GetAuthorizationUrl()
         {
             try
             {
@@ -145,16 +145,19 @@ namespace SoundMatchAPI.Services
                 // Add an artificial await to avoid CS1998
                 await Task.CompletedTask;
 
-                return new ReturnResponse<string>
+                return new ReturnResponse<SpotifyAuthorizationUrlResponse>
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Data = url,
+                    Data = new SpotifyAuthorizationUrlResponse
+                    {
+                        AuthorizationUrl = url
+                    },
                     Message = "Spotify authorization URL generated successfully."
                 };
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<string>
+                return new ReturnResponse<SpotifyAuthorizationUrlResponse>
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     Message = "Failed to generate Spotify authorization URL.",

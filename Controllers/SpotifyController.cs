@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.DTOs.Responses;
+using SoundMatchAPI.Data.DTOs.Responses.SpotifyAPIResponses;
 using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
-using SoundMatchAPI.Services;
 using System.Net;
 
 namespace SoundMatchAPI.Controllers
@@ -27,7 +26,7 @@ namespace SoundMatchAPI.Controllers
 
         // GET: api/Spotify/login
         [HttpGet("login")]
-        public async Task<IActionResult> Login()
+        public async Task<ActionResult<ReturnResponse<SpotifyTokenResponse>>> Login()
         {
             var returnResponse = await spotifyAuthService.GetAuthorizationUrl();
             switch (returnResponse.StatusCode)
@@ -35,28 +34,56 @@ namespace SoundMatchAPI.Controllers
                 case HttpStatusCode.InternalServerError:
                     return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
                 default:
-                    if (string.IsNullOrEmpty(returnResponse.Data))
+                    if (returnResponse.Data == null || string.IsNullOrEmpty(returnResponse.Data.AuthorizationUrl))
                         return StatusCode(StatusCodes.Status500InternalServerError, "Authorization URL is missing.");
                     return Ok(returnResponse.Data);
             }
-            ;
         }
 
         // GET: api/Spotify/callback
         [HttpGet("callback")]
-        public async Task<IActionResult> Callback([FromQuery] string code, [FromQuery] string state)
+        public async Task<ActionResult<UserProfileResponse>> Callback([FromQuery] string code, [FromQuery] string state)
         {
             var user = await userManager.GetUserAsync(User);
             if (user == null)
             {
                 return Forbid();
             }
-            var tokenResponse = await spotifyAuthService.ExchangeCodeAndStoreTokensAsync(user, code);
-            if (tokenResponse.StatusCode != HttpStatusCode.OK)
-                return StatusCode((int)tokenResponse.StatusCode, tokenResponse);
-            var returnResponse = await spotifyDataService.ConnectSpotifyAndPopulateMusicAsync(user, tokenResponse.Data!);
+            var tokenReturnResponse = await spotifyAuthService.ExchangeCodeAndStoreTokensAsync(user, code);
+            if (tokenReturnResponse.StatusCode != HttpStatusCode.OK || tokenReturnResponse.Data == null || string.IsNullOrEmpty(tokenReturnResponse.Data.AccessToken))
+                return StatusCode((int)tokenReturnResponse.StatusCode, tokenReturnResponse);
 
-            switch (returnResponse.StatusCode)
+            var spotifyDataReturnResponse = await spotifyDataService.ConnectSpotifyAndPopulateMusicAsync(user, tokenReturnResponse.Data.AccessToken);
+
+            switch (spotifyDataReturnResponse.StatusCode)
+            {
+                case HttpStatusCode.Forbidden:
+                    return Forbid();
+                case HttpStatusCode.NotFound:
+                    return NotFound(spotifyDataReturnResponse);
+                case HttpStatusCode.InternalServerError:
+                    return StatusCode(StatusCodes.Status500InternalServerError, spotifyDataReturnResponse);
+                default:
+                    return Ok(spotifyDataReturnResponse.Data);
+            }
+        }
+
+        // POST: api/Spotify/refresh-top-items
+        [HttpPost("refresh-top-items")]
+        [Authorize]
+        public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> RefreshTopItems()
+        {
+            var user = await userManager.GetUserAsync(User);
+            if (user == null)
+                return Forbid();
+
+            var tokenReturnResponse = await spotifyAuthService.GetAccessTokenAsync(user);
+            if (tokenReturnResponse.StatusCode != HttpStatusCode.OK || tokenReturnResponse.Data == null || string.IsNullOrEmpty(tokenReturnResponse.Data.AccessToken))
+                return StatusCode((int)tokenReturnResponse.StatusCode, tokenReturnResponse);
+
+            var returnResponse = await spotifyDataService.RefreshTopItemsAsync(user, tokenReturnResponse.Data.AccessToken);
+
+            switch(returnResponse.StatusCode)
             {
                 case HttpStatusCode.Forbidden:
                     return Forbid();
@@ -67,55 +94,34 @@ namespace SoundMatchAPI.Controllers
                 default:
                     return Ok(returnResponse.Data);
             }
-            ;
-        }
-
-        // POST: api/Spotify/refresh-top-items
-        [HttpPost("refresh-top-items")]
-        [Authorize]
-        public async Task<IActionResult> RefreshTopItems()
-        {
-            var user = await userManager.GetUserAsync(User);
-            if (user == null)
-                return Forbid();
-
-            var tokenResponse = await spotifyAuthService.GetAccessTokenAsync(user);
-            if (tokenResponse.StatusCode != HttpStatusCode.OK)
-                return StatusCode((int)tokenResponse.StatusCode, tokenResponse);
-
-            var returnResponse = await spotifyDataService.RefreshTopItemsAsync(user, tokenResponse.Data!);
-
-            return returnResponse.StatusCode switch
-            {
-                HttpStatusCode.Forbidden => Forbid(),
-                HttpStatusCode.NotFound => NotFound(returnResponse),
-                HttpStatusCode.InternalServerError => StatusCode(StatusCodes.Status500InternalServerError, returnResponse),
-                _ => Ok(returnResponse.Data)
-            };
         }
 
         // POST: api/Spotify/refresh-profile
         [HttpPost("refresh-profile")]
         [Authorize]
-        public async Task<IActionResult> RefreshProfile()
+        public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> RefreshProfile()
         {
             var user = await userManager.GetUserAsync(User);
             if (user == null)
                 return Forbid();
 
-            var tokenResponse = await spotifyAuthService.GetAccessTokenAsync(user);
-            if (tokenResponse.StatusCode != HttpStatusCode.OK)
-                return StatusCode((int)tokenResponse.StatusCode, tokenResponse);
+            var tokenReturnResponse = await spotifyAuthService.GetAccessTokenAsync(user);
+            if (tokenReturnResponse.StatusCode != HttpStatusCode.OK || tokenReturnResponse.Data == null || string.IsNullOrEmpty(tokenReturnResponse.Data.AccessToken))
+                return StatusCode((int)tokenReturnResponse.StatusCode, tokenReturnResponse);
 
-            var returnResponse = await spotifyDataService.RefreshUserProfileAsync(user, tokenResponse.Data!);
+            var returnResponse = await spotifyDataService.RefreshUserProfileAsync(user, tokenReturnResponse.Data.AccessToken);
 
-            return returnResponse.StatusCode switch
+            switch(returnResponse.StatusCode)
             {
-                HttpStatusCode.Forbidden => Forbid(),
-                HttpStatusCode.NotFound => NotFound(returnResponse),
-                HttpStatusCode.InternalServerError => StatusCode(StatusCodes.Status500InternalServerError, returnResponse),
-                _ => Ok(returnResponse.Data)
-            };
+                case HttpStatusCode.Forbidden:
+                    return Forbid();
+                case HttpStatusCode.NotFound:
+                    return NotFound(returnResponse);
+                case HttpStatusCode.InternalServerError:
+                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
+                default:
+                    return Ok(returnResponse.Data);
+            }
         }
     }
 }

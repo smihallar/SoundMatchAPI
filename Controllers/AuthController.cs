@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using SoundMatchAPI.Data.AuthModels;
 using SoundMatchAPI.Data.DTOs.Requests;
+using SoundMatchAPI.Data.DTOs.Responses;
 using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Services;
 
@@ -21,59 +22,57 @@ namespace SoundMatchAPI.Controllers
 
        //POST: api/Auth/register
        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserRegisterRequest request)
+        public async Task<ActionResult<ReturnResponse<AuthResponse>>> Register([FromBody] UserRegisterRequest request)
         {
             if (ModelState.IsValid == false)
             {
                 return BadRequest(ModelState);
             }
-            var result = await authService.RegisterUserAsync(request);
-
-            if (!result.Succeeded)
+            var returnResponse = await authService.RegisterUserAsync(request);
+            switch(returnResponse.StatusCode)
             {
-                if (result.Errors != null)
-                {
-                    foreach (var error in result.Errors)
+                case System.Net.HttpStatusCode.BadRequest:
+                    if (returnResponse.Errors != null)
                     {
-                        ModelState.AddModelError("", error);
+                        foreach (var error in returnResponse.Errors)
+                        {
+                            ModelState.AddModelError("", error);
+                        }
                     }
-                }
-                return BadRequest(ModelState);
+                    return BadRequest(ModelState);
+                case System.Net.HttpStatusCode.InternalServerError:
+                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
+                case System.Net.HttpStatusCode.OK:
+                    return Ok(returnResponse.Data);
             }
-
-            return Accepted();
         }
 
         //POST: api/Auth/login
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
+        public async Task<ActionResult<ReturnResponse<AuthResponse>>> Login([FromBody] UserLoginRequest request)
         {
             if (ModelState.IsValid == false)
             {
                 return BadRequest(ModelState);
             }
-            var result = await authService.LoginUserAsync(request);
+            var returnResponse = await authService.LoginUserAsync(request);
 
-            if (!result.Succeeded)
+            switch(returnResponse.StatusCode)
             {
-                if (result.Errors != null)
-                {
-                    foreach (var error in result.Errors)
+                case System.Net.HttpStatusCode.BadRequest:
+                    if (returnResponse.Errors != null)
                     {
-                        ModelState.AddModelError("", error);
+                        foreach (var error in returnResponse.Errors)
+                        {
+                            ModelState.AddModelError("", error);
+                        }
                     }
-                }
-                return BadRequest(ModelState);
+                    return BadRequest(ModelState);
+                case System.Net.HttpStatusCode.InternalServerError:
+                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
+                case System.Net.HttpStatusCode.OK:
+                    return Ok(returnResponse.Data);
             }
-
-            var response = new AuthResponse
-            {
-                UserId = result.UserId,
-                Email = request.Email,
-                Token = result.Token
-            };
-
-            return Ok(response);
         }
     }
 }

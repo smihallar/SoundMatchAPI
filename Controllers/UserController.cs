@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SoundMatchAPI.Constants;
 using SoundMatchAPI.Data.DTOs.Requests;
+using SoundMatchAPI.Data.DTOs.Responses;
 using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Services;
 using System.Net;
@@ -21,7 +22,7 @@ namespace SoundMatchAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<ActionResult<List<UserResponse>>> GetAllUsers()
         {
             var returnResponse = await userService.GetAllUsersAsync();
             switch(returnResponse.StatusCode)
@@ -36,7 +37,7 @@ namespace SoundMatchAPI.Controllers
         }
         // GET: api/User/{userId}
         [HttpGet("{userId}")]
-        public async Task<IActionResult> GetUserById(string userId)
+        public async Task<ActionResult<UserResponse>> GetUserById(string userId)
         {
             var returnResponse = await userService.GetUserByIdAsync(userId);
             switch (returnResponse.StatusCode)
@@ -53,7 +54,7 @@ namespace SoundMatchAPI.Controllers
         // PUT: api/User/bio/{userId}
         [HttpPut("bio/{userId}")]
         [Authorize]
-        public async Task<IActionResult> UpdateUserBio(string userId, [FromBody] UpdateUserBioRequest request)
+        public async Task<ActionResult<ReturnResponse>> UpdateUserBio(string userId, [FromBody] UpdateUserBioRequest request)
         {
             var uId = User.FindFirst(CustomClaimTypes.Uid)?.Value; // Id of user that is logged in
             if (uId == null)
@@ -76,7 +77,7 @@ namespace SoundMatchAPI.Controllers
 
         [HttpDelete("{userId}")]
         [Authorize]
-        public async Task<IActionResult> DeleteUser(string userId)
+        public async Task<ActionResult<ReturnResponse>> DeleteUser(string userId)
         {
             var uId = User.FindFirst(CustomClaimTypes.Uid)?.Value; // Id of user that is logged in
             if (uId == null)
@@ -98,7 +99,7 @@ namespace SoundMatchAPI.Controllers
         }
 
         [HttpGet("profile/{userId}")]
-        public async Task<IActionResult> GetUserProfile(string userId)
+        public async Task<ActionResult<UserProfileResponse>> GetUserProfile(string userId)
         {
             var returnResponse = await userService.GetUserProfileAsync(userId);
             switch (returnResponse.StatusCode)

@@ -24,7 +24,7 @@ namespace SoundMatchAPI.Services
             this.mapper = mapper;
         }
 
-        public async Task<ReturnResponse<IEnumerable<UserResponse>>> GetAllUsersAsync()
+        public async Task<ReturnResponse<List<UserResponse>>> GetAllUsersAsync()
         {
             try
             {
@@ -32,7 +32,7 @@ namespace SoundMatchAPI.Services
 
                 if (users == null)
                 {
-                    return new ReturnResponse<IEnumerable<UserResponse>>
+                    return new ReturnResponse<List<UserResponse>>
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "An error occurred while fetching users",
@@ -42,7 +42,7 @@ namespace SoundMatchAPI.Services
                 // Map each user to a UserResponse
                 var userResponses = users.Select(user => mapper.Map<UserResponse>(user)).ToList();
 
-                return new ReturnResponse<IEnumerable<UserResponse>>
+                return new ReturnResponse<List<UserResponse>>
                 {
                     Data = userResponses,
                     StatusCode = HttpStatusCode.OK
@@ -50,7 +50,7 @@ namespace SoundMatchAPI.Services
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<IEnumerable<UserResponse>>
+                return new ReturnResponse<List<UserResponse>>
                 {
                     Message = "An unexpected error occurred.",
                     Errors = new List<string> { $"Error: {ex.Message}" },

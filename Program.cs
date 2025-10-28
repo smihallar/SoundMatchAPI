@@ -60,6 +60,7 @@ namespace SoundMatchAPI
             builder.Services.AddScoped<ISpotifyAuthService, SpotifyAuthService>();
             builder.Services.AddScoped<ISpotifyDataService, SpotifyDataService>();
 
+            builder.Services.AddSwaggerGen();
             builder.Services.AddHttpClient();
 
             builder.Services.AddAuthentication(options =>
@@ -83,7 +84,7 @@ namespace SoundMatchAPI
 
             var app = builder.Build();
 
-            app.UseCors("AllowAll");
+            app.UseCors("AllowLocalhostClient");
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -99,8 +100,6 @@ namespace SoundMatchAPI
                 await SeedData.Initialize(context);
             }
             app.UseHttpsRedirection();
-
-            app.UseCors("AllowLocalHostClient");
 
             app.UseAuthentication();
             app.UseAuthorization();

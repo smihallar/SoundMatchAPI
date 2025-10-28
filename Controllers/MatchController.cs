@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SoundMatchAPI.Constants;
+using SoundMatchAPI.Data.DTOs.Responses;
 using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using System.Net;
 
@@ -21,7 +22,7 @@ namespace SoundMatchAPI.Controllers
         // GET: api/Match/{matchId}
         [HttpGet("{matchId}")]
         [Authorize]
-        public async Task<IActionResult> GetMatch(string matchId)
+        public async Task<ActionResult<ReturnResponse<MatchResponse>>> GetMatch(string matchId)
         {
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
             if (loggedInUserId == null)
@@ -44,7 +45,7 @@ namespace SoundMatchAPI.Controllers
         // POST: api/Match/all/{userId}
         [HttpPost("all/{userId}")]
         [Authorize]
-        public async Task<IActionResult> FindMatches(string userId)
+        public async Task<ActionResult<ReturnResponse<List<MatchResponse>>>> FindMatches(string userId)
         {
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
             if (loggedInUserId == null)
@@ -68,7 +69,7 @@ namespace SoundMatchAPI.Controllers
         // GET: api/Match/all/{userId}   
         [HttpGet("all/{userId}")]
         [Authorize]
-        public async Task<IActionResult> GetAllMatches(string userId)
+        public async Task<ActionResult<ReturnResponse<List<MatchResponse>>>> GetAllMatches(string userId)
         {
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
             if (loggedInUserId == null)
@@ -91,7 +92,7 @@ namespace SoundMatchAPI.Controllers
 
         [HttpDelete("{matchId}")]
         [Authorize]
-        public async Task<IActionResult> DeleteMatch(string matchId)
+        public async Task<ActionResult<ReturnResponse>> DeleteMatch(string matchId)
         {
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
             if (loggedInUserId == null)
