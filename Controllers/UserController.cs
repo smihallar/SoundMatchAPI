@@ -20,9 +20,9 @@ namespace SoundMatchAPI.Controllers
         {
             this.userService = userService;
         }
-
-        [HttpGet]
-        public async Task<ActionResult<List<UserResponse>>> GetAllUsers()
+        // GET: api/User/all
+        [HttpGet("all")]
+        public async Task<ActionResult<ReturnResponse<List<UserResponse>>>> GetAllUsers()
         {
             var returnResponse = await userService.GetAllUsersAsync();
             switch(returnResponse.StatusCode)
@@ -32,12 +32,12 @@ namespace SoundMatchAPI.Controllers
                 case HttpStatusCode.InternalServerError:
                     return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
                 default:
-                    return Ok(returnResponse);
+                    return Ok(returnResponse.Data);
             }
         }
         // GET: api/User/{userId}
         [HttpGet("{userId}")]
-        public async Task<ActionResult<UserResponse>> GetUserById(string userId)
+        public async Task<ActionResult<ReturnResponse<UserResponse>>> GetUserById(string userId)
         {
             var returnResponse = await userService.GetUserByIdAsync(userId);
             switch (returnResponse.StatusCode)
@@ -47,7 +47,7 @@ namespace SoundMatchAPI.Controllers
                 case HttpStatusCode.InternalServerError:
                     return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
                 default:
-                    return Ok(returnResponse);
+                    return Ok(returnResponse.Data);
             }
         }
 
@@ -99,7 +99,7 @@ namespace SoundMatchAPI.Controllers
         }
 
         [HttpGet("profile/{userId}")]
-        public async Task<ActionResult<UserProfileResponse>> GetUserProfile(string userId)
+        public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> GetUserProfile(string userId)
         {
             var returnResponse = await userService.GetUserProfileAsync(userId);
             switch (returnResponse.StatusCode)

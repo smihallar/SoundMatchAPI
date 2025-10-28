@@ -42,8 +42,8 @@ namespace SoundMatchAPI.Controllers
         }
 
         // Find and create new matches for a user
-        // POST: api/Match/all/{userId}
-        [HttpPost("all/{userId}")]
+        // POST: api/Match/find-matches/{userId}
+        [HttpPost("find-matches/{userId}")]
         [Authorize]
         public async Task<ActionResult<ReturnResponse<List<MatchResponse>>>> FindMatches(string userId)
         {

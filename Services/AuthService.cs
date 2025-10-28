@@ -23,18 +23,17 @@ namespace SoundMatchAPI.Services
             this.configuration = configuration;
         }
 
-        public async Task<ReturnResponse<AuthResponse>> RegisterUserAsync(UserRegisterRequest request)
+        public async Task<ReturnResponse> RegisterUserAsync(UserRegisterRequest request)
         {
             try
             {
                 var existingUser = await userManager.FindByEmailAsync(request.Email);
                 if (existingUser != null)
                 {
-                    return new ReturnResponse<AuthResponse>
+                    return new ReturnResponse
                     {
                         StatusCode = System.Net.HttpStatusCode.BadRequest,
                         Errors = new List<string> { "User with this email already exists." },
-                        Data = null
                     };
                 }
                 var newUser = new User
@@ -45,30 +44,24 @@ namespace SoundMatchAPI.Services
                 var createUserResult = await userManager.CreateAsync(newUser, request.Password);
                 if (!createUserResult.Succeeded)
                 {
-                    return new ReturnResponse<AuthResponse>
+                    return new ReturnResponse
                     {
                         StatusCode = System.Net.HttpStatusCode.BadRequest,
-                        Errors = createUserResult.Errors.Select(e => e.Description).ToList(),
-                        Data = null
+                        Errors = createUserResult.Errors.Select(e => e.Description).ToList()
                     };
                 }
                 await userManager.AddToRoleAsync(newUser, ApiRoles.User);
-                return new ReturnResponse<AuthResponse>
+                return new ReturnResponse
                 {
-                    StatusCode = System.Net.HttpStatusCode.OK,
-                    Data = new AuthResponse
-                    {
-                        UserId = newUser.Id
-                    }
+                    StatusCode = System.Net.HttpStatusCode.OK
                 };
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<AuthResponse>
+                return new ReturnResponse
                 {
                     StatusCode = System.Net.HttpStatusCode.InternalServerError,
-                    Errors = new List<string> { ex.Message },
-                    Data = null
+                    Errors = new List<string> { ex.Message }
                 };
             }
         }

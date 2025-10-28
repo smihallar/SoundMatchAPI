@@ -22,7 +22,7 @@ namespace SoundMatchAPI.Controllers
 
        //POST: api/Auth/register
        [HttpPost("register")]
-        public async Task<ActionResult<ReturnResponse<AuthResponse>>> Register([FromBody] UserRegisterRequest request)
+        public async Task<ActionResult<ReturnResponse>> Register([FromBody] UserRegisterRequest request)
         {
             if (ModelState.IsValid == false)
             {
@@ -42,8 +42,8 @@ namespace SoundMatchAPI.Controllers
                     return BadRequest(ModelState);
                 case System.Net.HttpStatusCode.InternalServerError:
                     return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                case System.Net.HttpStatusCode.OK:
-                    return Ok(returnResponse.Data);
+                default:
+                    return Ok();
             }
         }
 
@@ -70,7 +70,7 @@ namespace SoundMatchAPI.Controllers
                     return BadRequest(ModelState);
                 case System.Net.HttpStatusCode.InternalServerError:
                     return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                case System.Net.HttpStatusCode.OK:
+                default:
                     return Ok(returnResponse.Data);
             }
         }

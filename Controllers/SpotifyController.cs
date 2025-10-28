@@ -42,7 +42,7 @@ namespace SoundMatchAPI.Controllers
 
         // GET: api/Spotify/callback
         [HttpGet("callback")]
-        public async Task<ActionResult<UserProfileResponse>> Callback([FromQuery] string code, [FromQuery] string state)
+        public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> Callback([FromQuery] string code, [FromQuery] string state)
         {
             var user = await userManager.GetUserAsync(User);
             if (user == null)
