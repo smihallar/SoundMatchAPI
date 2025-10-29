@@ -169,13 +169,13 @@ namespace SoundMatchAPI.Services
             }
         }
 
-        public async Task<ReturnResponse> UpdateUserBioAsync(string userId, string bio, string loggedInUserId)
+        public async Task<ReturnResponse<UserProfileResponse>> UpdateUserBioAsync(string userId, string bio, string loggedInUserId)
         {
             try
             {
                 if (userId != loggedInUserId)
                 {
-                    return new ReturnResponse
+                    return new ReturnResponse<UserProfileResponse>
                     {
                         Message = "An error has occurred while updating user bio.",
                         Errors = new List<string> { "User is not authorized to update this resource." },
@@ -185,7 +185,7 @@ namespace SoundMatchAPI.Services
                 var user = await userRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
-                    return new ReturnResponse
+                    return new ReturnResponse<UserProfileResponse>
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "User not found",
@@ -194,14 +194,16 @@ namespace SoundMatchAPI.Services
                 }
                 user.Biography = bio;
                 await userRepository.UpdateAsync(user);
-                return new ReturnResponse
+                var userProfileResponse = mapper.Map<UserProfileResponse>(user);
+                return new ReturnResponse<UserProfileResponse>
                 {
-                    StatusCode = HttpStatusCode.NoContent
+                    StatusCode = HttpStatusCode.NoContent,
+                    Data = userProfileResponse
                 };
             }
             catch (Exception ex)
             {
-                return new ReturnResponse
+                return new ReturnResponse<UserProfileResponse>
                 {
                     Message = "An unexpected error occurred.",
                     Errors = new List<string> { $"Error: {ex.Message}" },

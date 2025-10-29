@@ -20,21 +20,7 @@ namespace SoundMatchAPI.Controllers
         {
             this.userService = userService;
         }
-        // GET: api/User/all
-        [HttpGet("all")]
-        public async Task<ActionResult<ReturnResponse<List<UserResponse>>>> GetAllUsers()
-        {
-            var returnResponse = await userService.GetAllUsersAsync();
-            switch(returnResponse.StatusCode)
-            {
-                case HttpStatusCode.NotFound:
-                    return NotFound();
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
-            }
-        }
+
         // GET: api/User/{userId}
         [HttpGet("{userId}")]
         public async Task<ActionResult<ReturnResponse<UserResponse>>> GetUserById(string userId)
@@ -54,7 +40,7 @@ namespace SoundMatchAPI.Controllers
         // PUT: api/User/bio/{userId}
         [HttpPut("bio/{userId}")]
         [Authorize]
-        public async Task<ActionResult<ReturnResponse>> UpdateUserBio(string userId, [FromBody] UpdateUserBioRequest request)
+        public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> UpdateUserBio(string userId, [FromBody] UpdateUserBioRequest request)
         {
             var uId = User.FindFirst(CustomClaimTypes.Uid)?.Value; // Id of user that is logged in
             if (uId == null)
@@ -71,7 +57,7 @@ namespace SoundMatchAPI.Controllers
                 case HttpStatusCode.InternalServerError:
                     return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
                 default:
-                    return Ok(returnResponse);
+                    return Ok(returnResponse.Data);
             }
         }
 

@@ -25,7 +25,7 @@ namespace SoundMatchAPI.Services
             this.mapper = mapper;
         }
 
-        public async Task<ReturnResponse<UserProfileResponse>> ConnectSpotifyAndPopulateMusicAsync(User user, string accessToken)
+        public async Task<ReturnResponse> ConnectSpotifyAndPopulateMusicAsync(User user, string accessToken)
         {
             try
             {
@@ -40,16 +40,15 @@ namespace SoundMatchAPI.Services
                 // Map final user profile
                 var userProfile = mapper.Map<UserProfileResponse>(user);
 
-                return new ReturnResponse<UserProfileResponse>
+                return new ReturnResponse
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Data = userProfile,
                     Message = "Spotify connected and fetched data successfully."
                 };
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<UserProfileResponse>
+                return new ReturnResponse
                 {
                     StatusCode = HttpStatusCode.InternalServerError,
                     Message = "Failed to fetch Spotify data.",

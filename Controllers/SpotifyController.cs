@@ -16,17 +16,19 @@ namespace SoundMatchAPI.Controllers
         private readonly ISpotifyDataService spotifyDataService;
         private readonly ISpotifyAuthService spotifyAuthService;
         private readonly UserManager<User> userManager;
+        private readonly IConfiguration configuration;
 
-        public SpotifyController(ISpotifyDataService spotifyDataService, ISpotifyAuthService spotifyAuthService, UserManager<User> userManager)
+        public SpotifyController(ISpotifyDataService spotifyDataService, ISpotifyAuthService spotifyAuthService, UserManager<User> userManager, IConfiguration configuration)
         {
             this.spotifyDataService = spotifyDataService;
             this.spotifyAuthService = spotifyAuthService;
             this.userManager = userManager;
+            this.configuration = configuration;
         }
 
         // GET: api/Spotify/login
         [HttpGet("login")]
-        public async Task<ActionResult<ReturnResponse<SpotifyTokenResponse>>> Login()
+        public async Task<ActionResult<ReturnResponse<SpotifyAuthorizationUrlResponse>>> Login()
         {
             var returnResponse = await spotifyAuthService.GetAuthorizationUrl();
             switch (returnResponse.StatusCode)
@@ -42,7 +44,7 @@ namespace SoundMatchAPI.Controllers
 
         // GET: api/Spotify/callback
         [HttpGet("callback")]
-        public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> Callback([FromQuery] string code, [FromQuery] string state)
+        public async Task<ActionResult<ReturnResponse>> Callback([FromQuery] string code, [FromQuery] string state)
         {
             var user = await userManager.GetUserAsync(User);
             if (user == null)
@@ -64,7 +66,7 @@ namespace SoundMatchAPI.Controllers
                 case HttpStatusCode.InternalServerError:
                     return StatusCode(StatusCodes.Status500InternalServerError, spotifyDataReturnResponse);
                 default:
-                    return Ok(spotifyDataReturnResponse.Data);
+                    return Redirect($"{configuration["ClientUrl"]}/profile/{user.Id}");
             }
         }
 
