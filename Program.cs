@@ -1,19 +1,20 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using SoundMatchAPI.Data;
 using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
 using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using SoundMatchAPI.Data.Repositories;
 using SoundMatchAPI.Data.SyntheticData;
+using SoundMatchAPI.Hubs;
 using SoundMatchAPI.Services;
 using System;
-using System.Threading.Tasks;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.OpenApi.Models;
+using System.Threading.Tasks;
 
 namespace SoundMatchAPI
 {
@@ -63,6 +64,7 @@ namespace SoundMatchAPI
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpClient();
 
+
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -105,6 +107,8 @@ namespace SoundMatchAPI
             app.UseAuthorization();
 
             app.MapControllers();
+
+            //app.MapHub<ChatHub>("/chathub");
 
             app.Run();
         }

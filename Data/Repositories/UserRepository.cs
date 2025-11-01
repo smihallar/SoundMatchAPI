@@ -24,5 +24,14 @@ namespace SoundMatchAPI.Data.Repositories
                 await ctx.SaveChangesAsync();
             }
         }
+
+        public async Task<User?> GetUserWithFavoriteMusic(string userId)
+        {
+            return await ctx.Users
+                .Include(u=>u.FavoriteArtists)
+                .Include(u=>u.FavoriteSongs)
+                .Include(u=>u.FavoriteGenres)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+        }
     }
 }

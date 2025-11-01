@@ -44,7 +44,7 @@ namespace SoundMatchAPI.Controllers
         // Find and create new matches for a user
         // POST: api/Match/find-matches/{userId}
         [HttpPost("find-matches/{userId}")]
-        [Authorize]
+        //[Authorize]
         public async Task<ActionResult<ReturnResponse<List<MatchResponse>>>> FindMatches(string userId)
         {
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;

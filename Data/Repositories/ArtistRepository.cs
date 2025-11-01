@@ -30,6 +30,7 @@ namespace SoundMatchAPI.Data.Repositories
         public async Task<Artist?> GetBySpotifyIdAsync(string spotifyId)
         {
             return await ctx.Artists
+                .Include(a => a.Genres)
                 .FirstOrDefaultAsync(a => a.SpotifyId == spotifyId);
         }
     }

@@ -5,6 +5,7 @@ using SoundMatchAPI.Data.DTOs.Responses.SpotifyAPIResponses;
 using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
 using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
+using SoundMatchAPI.Data.Repositories;
 using System.Net;
 using System.Text.Json;
 
@@ -71,7 +72,7 @@ namespace SoundMatchAPI.Services
                         Message = "User top items refreshed recently. You can refresh music taste once per week"
                     };
                 }
-                // Fetch top 50 artists, long term (1 year)
+                //Fetch top 50 artists, long term(1 year)
                 var artistsRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=50&offset=0");
                 artistsRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 var artistsResponse = await httpClient.SendAsync(artistsRequest);
@@ -104,6 +105,7 @@ namespace SoundMatchAPI.Services
                         Errors = new List<string> { "Top items data is null." }
                     };
                 }
+
                 // Map spotify responses to models
                 var artists = mapper.Map<List<Artist>>(topArtists.Items);
                 var tracks = mapper.Map<List<Song>>(topTracks.Items);
@@ -114,18 +116,71 @@ namespace SoundMatchAPI.Services
                 var musicProfile = new MusicProfile(tracks, artists, genres);
                 await musicService.SaveSpotifyMusicAsync(musicProfile);
 
-                // Update user entity
-                user.FavoriteArtists.AddRange(artists);
-                user.FavoriteArtistIds.AddRange(artists.Select(a => a.ArtistId));
-                user.FavoriteSongs.AddRange(tracks);
-                user.FavoriteSongIds.AddRange(tracks.Select(s => s.SongId));
-                user.FavoriteGenres.AddRange(genres);
-                user.FavoriteGenreIds.AddRange(genres.Select(g => g.GenreId));
-                user.MusicTasteLastRefreshed = DateTime.UtcNow;
+                // Re-fetch the persisted entities to avoid duplicates
 
-                await userRepository.UpdateAsync(user);
+                var existingArtists = await musicService.GetArtistBySpotifyIdsAsync(artists.Select(a => a.SpotifyId).ToList());
 
-                var userProfile = mapper.Map<UserProfileResponse>(user);
+                var existingSongs = await musicService.GetSongBySpotifyIdsAsync(tracks.Select(t => t.SpotifyId).ToList());
+
+                var existingGenres = await musicService.GetGenreByNamesAsync(genres.Select(g => g.Name).ToList());
+
+                // Fetch the user with their music to update without overwriting or duplicating
+                var userWithFavorites = await userRepository.GetUserWithFavoriteMusic(user.Id);
+                if (userWithFavorites == null)
+                {
+                    return new ReturnResponse<UserProfileResponse>
+                    {
+                        StatusCode = HttpStatusCode.NotFound,
+                        Message = "User not found.",
+                        Errors = new List<string> { "User does not exist in the database." }
+                    };
+                }
+                var missingArtists = existingArtists
+                    .Where(a => !userWithFavorites.FavoriteArtists.Any(fa => fa.ArtistId == a.ArtistId))
+                    .ToList();
+
+                if (missingArtists.Count > 0)
+                {
+                    userWithFavorites.FavoriteArtists.AddRange(missingArtists);
+                    foreach (var artist in missingArtists)
+                    {
+                        if (!userWithFavorites.FavoriteArtistIds.Contains(artist.ArtistId))
+                            userWithFavorites.FavoriteArtistIds.Add(artist.ArtistId);
+                    }
+                }
+
+                var missingSongs = existingSongs
+                    .Where(s => !userWithFavorites.FavoriteSongs.Any(fs => fs.SongId == s.SongId))
+                    .ToList();
+                if (missingSongs.Count > 0)
+                {
+                    userWithFavorites.FavoriteSongs.AddRange(missingSongs);
+                    foreach (var song in missingSongs)
+                    {
+                        if (!userWithFavorites.FavoriteSongIds.Contains(song.SongId))
+                            userWithFavorites.FavoriteSongIds.Add(song.SongId);
+                    }
+                }
+
+                var missingGenres = existingGenres
+                    .Where(g => !userWithFavorites.FavoriteGenres.Any(fg => fg.GenreId == g.GenreId))
+                    .ToList();
+                if (missingGenres.Count > 0)
+                {
+                    userWithFavorites.FavoriteGenres.AddRange(missingGenres);
+                    foreach (var genre in missingGenres)
+                    {
+                        if (!userWithFavorites.FavoriteGenreIds.Contains(genre.GenreId))
+                            userWithFavorites.FavoriteGenreIds.Add(genre.GenreId);
+                    }
+                }
+
+                userWithFavorites.MusicTasteLastRefreshed = DateTime.UtcNow;
+
+                await userRepository.UpdateAsync(userWithFavorites);
+
+                // Map to response DTO
+                var userProfile = mapper.Map<UserProfileResponse>(userWithFavorites);
 
                 return new ReturnResponse<UserProfileResponse>
                 {
@@ -143,7 +198,7 @@ namespace SoundMatchAPI.Services
                     Errors = new List<string> { ex.Message }
                 };
             }
-        }
+        } 
 
         public async Task<ReturnResponse<UserProfileResponse>> RefreshUserProfileAsync(User user, string accessToken)
         {

@@ -90,6 +90,7 @@ namespace SoundMatchAPI.Services
                     {
                         Token = tokenString,
                         UserId = user.Id,
+                        Email = user.Email
                     },
                     StatusCode = System.Net.HttpStatusCode.OK,
                 };

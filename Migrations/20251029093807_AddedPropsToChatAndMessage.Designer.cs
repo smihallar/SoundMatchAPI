@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SoundMatchAPI.Data;
 
@@ -11,9 +12,11 @@ using SoundMatchAPI.Data;
 namespace SoundMatchAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251029093807_AddedPropsToChatAndMessage")]
+    partial class AddedPropsToChatAndMessage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -308,12 +311,9 @@ namespace SoundMatchAPI.Migrations
 
                     b.Property<string>("SpotifyId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ArtistId");
-
-                    b.HasIndex("SpotifyId")
-                        .IsUnique();
 
                     b.ToTable("Artists");
                 });
@@ -342,12 +342,9 @@ namespace SoundMatchAPI.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("GenreId");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
 
                     b.ToTable("Genres");
                 });
@@ -427,16 +424,13 @@ namespace SoundMatchAPI.Migrations
 
                     b.Property<string>("SpotifyId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SongId");
-
-                    b.HasIndex("SpotifyId")
-                        .IsUnique();
 
                     b.ToTable("Songs");
                 });

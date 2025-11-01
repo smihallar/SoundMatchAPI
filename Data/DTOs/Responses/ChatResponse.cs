@@ -1,6 +1,8 @@
-﻿namespace SoundMatchAPI.Data.Models
+﻿using SoundMatchAPI.Data.Models;
+
+namespace SoundMatchAPI.Data.DTOs.Responses
 {
-    public class Chat
+    public class ChatResponse
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
 

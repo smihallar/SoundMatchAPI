@@ -72,7 +72,6 @@ namespace SoundMatchAPI.Controllers
 
         // POST: api/Spotify/refresh-top-items
         [HttpPost("refresh-top-items")]
-        [Authorize]
         public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> RefreshTopItems()
         {
             var user = await userManager.GetUserAsync(User);

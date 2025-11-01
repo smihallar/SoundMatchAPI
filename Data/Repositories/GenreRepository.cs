@@ -24,5 +24,13 @@ namespace SoundMatchAPI.Data.Repositories
             return await ctx.Genres
                 .FirstOrDefaultAsync(g => g.Name.ToLower() == name.ToLower());
         }
+
+        public async Task<IEnumerable<Genre>> GetByNamesAsync(IEnumerable<string> genreNames)
+        {
+            var lowerNames = genreNames.Select(n => n.ToLower()).ToList();
+            return await ctx.Genres
+                .Where(g => lowerNames.Contains(g.Name.ToLower()))
+                .ToListAsync();
+        }
     }
 }

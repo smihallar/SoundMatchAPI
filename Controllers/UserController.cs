@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SoundMatchAPI.Constants;
@@ -6,6 +7,7 @@ using SoundMatchAPI.Data.DTOs.Requests;
 using SoundMatchAPI.Data.DTOs.Responses;
 using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Services;
+using SoundMatchAPI.Data.Models;
 using System.Net;
 
 namespace SoundMatchAPI.Controllers
@@ -15,10 +17,12 @@ namespace SoundMatchAPI.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService userService;
+        private readonly IMapper mapper;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, IMapper mapper)
         {
             this.userService = userService;
+            this.mapper = mapper;
         }
 
         // GET: api/User/{userId}
@@ -98,5 +102,15 @@ namespace SoundMatchAPI.Controllers
                     return Ok(returnResponse);
             }
         }
+
+        //[HttpGet("all-user-profiles")]
+        //public async Task<ActionResult<ReturnResponse<List<UserProfileResponse>>>> GetAllUserProfiles()
+        //{
+        //    var response = await userService.GetAllUsersAsync();
+        //    foreach(var userResponse in response.Data)
+        //    {
+        //        var user = mapper.Map<User(userResponse)>
+        //    }
+        //}
     }
 }
