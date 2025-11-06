@@ -6,6 +6,8 @@ using SoundMatchAPI.Data.DTOs.Requests;
 using SoundMatchAPI.Data.DTOs.Responses;
 using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Services;
+using System.Net;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SoundMatchAPI.Controllers
 {
@@ -20,59 +22,58 @@ namespace SoundMatchAPI.Controllers
             this.authService = authService;
         }
 
-       //POST: api/Auth/register
-       [HttpPost("register")]
+        //POST: api/Auth/register
+        [HttpPost("register")]
         public async Task<ActionResult<ReturnResponse>> Register([FromBody] UserRegisterRequest request)
         {
-            if (ModelState.IsValid == false)
+            if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return new ReturnResponse
+                {
+                    StatusCode = HttpStatusCode.BadRequest,
+                    Message = "Invalid request.",
+                    Errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList()
+                };
             }
             var returnResponse = await authService.RegisterUserAsync(request);
-            switch(returnResponse.StatusCode)
+
+            return new ReturnResponse<AuthResponse>
             {
-                case System.Net.HttpStatusCode.BadRequest:
-                    if (returnResponse.Errors != null)
-                    {
-                        foreach (var error in returnResponse.Errors)
-                        {
-                            ModelState.AddModelError("", error);
-                        }
-                    }
-                    return BadRequest(ModelState);
-                case System.Net.HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok();
-            }
+                StatusCode = returnResponse.StatusCode,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>(),
+            };
         }
 
         //POST: api/Auth/login
         [HttpPost("login")]
         public async Task<ActionResult<ReturnResponse<AuthResponse>>> Login([FromBody] UserLoginRequest request)
         {
-            if (ModelState.IsValid == false)
+            if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return new ReturnResponse<AuthResponse>
+                {
+                    StatusCode = HttpStatusCode.BadRequest,
+                    Message = "Invalid request.",
+                    Errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList(),
+                    Data = null
+                };
             }
             var returnResponse = await authService.LoginUserAsync(request);
 
-            switch(returnResponse.StatusCode)
+            return new ReturnResponse<AuthResponse>
             {
-                case System.Net.HttpStatusCode.BadRequest:
-                    if (returnResponse.Errors != null)
-                    {
-                        foreach (var error in returnResponse.Errors)
-                        {
-                            ModelState.AddModelError("", error);
-                        }
-                    }
-                    return BadRequest(ModelState);
-                case System.Net.HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>(),
+                Data = returnResponse.Data ?? null
+            };
         }
     }
 }

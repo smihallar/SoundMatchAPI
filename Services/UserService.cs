@@ -45,7 +45,8 @@ namespace SoundMatchAPI.Services
                 return new ReturnResponse<List<UserResponse>>
                 {
                     Data = userResponses,
-                    StatusCode = HttpStatusCode.OK
+                    StatusCode = HttpStatusCode.OK,
+                    Message = "Users fetched successfully."
                 };
             }
             catch (Exception ex)
@@ -77,13 +78,14 @@ namespace SoundMatchAPI.Services
                 {
                     StatusCode = HttpStatusCode.OK,
                     Data = userResponse,
+                    Message = "User fetched successfully."
                 };
             }
             catch (Exception ex)
             {
                 return new ReturnResponse<UserResponse>
                 {
-                    Message = "Ett oväntat fel har inträffat.",
+                    Message = "An unexpected error occurred.",
                     Errors = new List<string> { $"Error: {ex.Message}" },
                     StatusCode = HttpStatusCode.InternalServerError
                 };
@@ -108,7 +110,9 @@ namespace SoundMatchAPI.Services
                 {
                     return new ReturnResponse
                     {
-                        StatusCode = HttpStatusCode.NotFound
+                        StatusCode = HttpStatusCode.NotFound,
+                        Message = "Something went wrong while deleting user.",
+                        Errors = new List<string> { "No user found to delete." }
                     };
                 }
 
@@ -116,14 +120,15 @@ namespace SoundMatchAPI.Services
                 await matchRepository.DeleteMatchesByUserIdAsync(userId);
                 return new ReturnResponse
                 {
-                    StatusCode = HttpStatusCode.NoContent
+                    StatusCode = HttpStatusCode.NoContent,
+                    Message = "User deleted successfully."
                 };
             }
             catch (Exception ex)
             {
                 return new ReturnResponse
                 {
-                    Message = "An error occurred while deleting user",
+                    Message = "An unexpected error occurred while deleting user",
                     Errors = new List<string> { $"Error: {ex.Message}." },
                     StatusCode = HttpStatusCode.InternalServerError
                 };
@@ -155,7 +160,8 @@ namespace SoundMatchAPI.Services
                 return new ReturnResponse<UserProfileResponse>
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Data = userProfileResponse
+                    Data = userProfileResponse,
+                    Message = "User profile fetched successfully."
                 };
             }
             catch (Exception ex)
@@ -198,7 +204,8 @@ namespace SoundMatchAPI.Services
                 return new ReturnResponse<UserProfileResponse>
                 {
                     StatusCode = HttpStatusCode.NoContent,
-                    Data = userProfileResponse
+                    Data = userProfileResponse,
+                    Message = "User bio updated successfully."
                 };
             }
             catch (Exception ex)

@@ -38,9 +38,6 @@ namespace SoundMatchAPI.Services
                 var topItemsResponse = await RefreshTopItemsAsync(user, accessToken);
                 if (topItemsResponse.StatusCode != HttpStatusCode.OK) return topItemsResponse;
 
-                // Map final user profile
-                var userProfile = mapper.Map<UserProfileResponse>(user);
-
                 return new ReturnResponse
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -67,12 +64,13 @@ namespace SoundMatchAPI.Services
                 {
                     return new ReturnResponse<UserProfileResponse>
                     {
-                        StatusCode = HttpStatusCode.OK,
+                        StatusCode = HttpStatusCode.Forbidden,
                         Data = mapper.Map<UserProfileResponse>(user),
                         Message = "User top items refreshed recently. You can refresh music taste once per week"
                     };
                 }
-                //Fetch top 50 artists, long term(1 year)
+
+                //Fetch top 50 artists, long term (1 year)
                 var artistsRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=50&offset=0");
                 artistsRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 var artistsResponse = await httpClient.SendAsync(artistsRequest);
@@ -118,11 +116,11 @@ namespace SoundMatchAPI.Services
 
                 // Re-fetch the persisted entities to avoid duplicates
 
-                var existingArtists = await musicService.GetArtistBySpotifyIdsAsync(artists.Select(a => a.SpotifyId).ToList());
+                var existingArtists = await musicService.GetArtistBySpotifyIdsAsync(artists.Select(a => a.SpotifyId).ToList()) ?? new List<Artist>();
 
-                var existingSongs = await musicService.GetSongBySpotifyIdsAsync(tracks.Select(t => t.SpotifyId).ToList());
+                var existingSongs = await musicService.GetSongBySpotifyIdsAsync(tracks.Select(t => t.SpotifyId).ToList()) ?? new List<Song>();
 
-                var existingGenres = await musicService.GetGenreByNamesAsync(genres.Select(g => g.Name).ToList());
+                var existingGenres = await musicService.GetGenreByNamesAsync(genres.Select(g => g.Name).ToList()) ?? new List<Genre>();
 
                 // Fetch the user with their music to update without overwriting or duplicating
                 var userWithFavorites = await userRepository.GetUserWithFavoriteMusic(user.Id);
@@ -209,7 +207,7 @@ namespace SoundMatchAPI.Services
                 {
                     return new ReturnResponse<UserProfileResponse>
                     {
-                        StatusCode = HttpStatusCode.OK,
+                        StatusCode = HttpStatusCode.Forbidden,
                         Data = mapper.Map<UserProfileResponse>(user),
                         Message = "User profile refreshed recently. You can refresh user details once per week"
                     };

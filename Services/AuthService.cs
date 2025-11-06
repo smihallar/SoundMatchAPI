@@ -33,7 +33,8 @@ namespace SoundMatchAPI.Services
                     return new ReturnResponse
                     {
                         StatusCode = System.Net.HttpStatusCode.BadRequest,
-                        Errors = new List<string> { "User with this email already exists." },
+                        Message = "User registration failed.",
+                        Errors = new List<string> { "User with this email already exists." }
                     };
                 }
                 var newUser = new User
@@ -47,13 +48,15 @@ namespace SoundMatchAPI.Services
                     return new ReturnResponse
                     {
                         StatusCode = System.Net.HttpStatusCode.BadRequest,
-                        Errors = createUserResult.Errors.Select(e => e.Description).ToList()
+                        Errors = createUserResult.Errors.Select(e => e.Description).ToList(),
+                        Message = "User registration failed."
                     };
                 }
                 await userManager.AddToRoleAsync(newUser, ApiRoles.User);
                 return new ReturnResponse
                 {
-                    StatusCode = System.Net.HttpStatusCode.OK
+                    StatusCode = System.Net.HttpStatusCode.OK,
+                    Message = "User registered successfully."
                 };
             }
             catch (Exception ex)
@@ -78,7 +81,8 @@ namespace SoundMatchAPI.Services
                     {
                         Data = null,
                         StatusCode = System.Net.HttpStatusCode.BadRequest,
-                        Errors = new List<string> { "Wrong email or password." }
+                        Errors = new List<string> { "Wrong email or password." },
+                        Message = "Authentication failed."
                     };
                 }
 
@@ -93,6 +97,7 @@ namespace SoundMatchAPI.Services
                         Email = user.Email
                     },
                     StatusCode = System.Net.HttpStatusCode.OK,
+                    Message = "Authentication successful."
                 };
             }
             catch (Exception ex)
@@ -101,7 +106,8 @@ namespace SoundMatchAPI.Services
                 {
                     Data = null,
                     StatusCode = System.Net.HttpStatusCode.InternalServerError,
-                    Errors = new List<string> { ex.Message }
+                    Errors = new List<string> { ex.Message },
+                    Message = "Something went wrong. Authentication failed."
                 };
             }
         }

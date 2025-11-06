@@ -27,18 +27,22 @@ namespace SoundMatchAPI.Controllers
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
             if (loggedInUserId == null)
             {
-                return Forbid();
+                return new ReturnResponse<MatchResponse>
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Data = null,
+                    Errors = new List<string> { "User is not logged in." }
+                };
             }
             var returnResponse = await matchService.GetMatchByIdWithDetailsAsync(matchId, loggedInUserId);
-            switch (returnResponse.StatusCode)
+            return new ReturnResponse<MatchResponse>
             {
-                case HttpStatusCode.NotFound:
-                    return NotFound(returnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
 
         // Find and create new matches for a user
@@ -50,20 +54,22 @@ namespace SoundMatchAPI.Controllers
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
             if (loggedInUserId == null)
             {
-                return Forbid();
+                return new ReturnResponse<List<MatchResponse>>
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Data = null,
+                    Errors = new List<string> { "User is not logged in." }
+                };
             }
             var returnResponse = await matchService.AddMatches(userId, loggedInUserId);
-            switch (returnResponse.StatusCode)
+            return new ReturnResponse<List<MatchResponse>>
             {
-                case HttpStatusCode.Forbidden:
-                    return Forbid();
-                case HttpStatusCode.NotFound:
-                    return NotFound(returnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
 
         // GET: api/Match/all/{userId}   
@@ -74,20 +80,22 @@ namespace SoundMatchAPI.Controllers
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
             if (loggedInUserId == null)
             {
-                return Forbid();
+                return new ReturnResponse<List<MatchResponse>>
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Data = null,
+                    Errors = new List<string> { "User is not logged in." }
+                };
             }
             var returnResponse = await matchService.GetMatchesByUserIdAsync(userId, loggedInUserId);
-            switch (returnResponse.StatusCode)
+            return new ReturnResponse<List<MatchResponse>>
             {
-                case HttpStatusCode.Forbidden:
-                    return Forbid();
-                case HttpStatusCode.NotFound:
-                    return NotFound(returnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
 
         [HttpDelete("{matchId}")]
@@ -97,20 +105,20 @@ namespace SoundMatchAPI.Controllers
             var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
             if (loggedInUserId == null)
             {
-                return Forbid();
+                return new ReturnResponse
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Errors = new List<string> { "User is not logged in." }
+                };
             }
             var returnResponse = await matchService.DeleteMatchAsync(matchId, loggedInUserId);
-            switch (returnResponse.StatusCode)
+            return new ReturnResponse
             {
-                case HttpStatusCode.Forbidden:
-                    return Forbid();
-                case HttpStatusCode.NotFound:
-                    return NotFound(returnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Message);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
     }
 }

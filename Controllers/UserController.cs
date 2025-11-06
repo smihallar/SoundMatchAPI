@@ -17,12 +17,10 @@ namespace SoundMatchAPI.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService userService;
-        private readonly IMapper mapper;
 
-        public UserController(IUserService userService, IMapper mapper)
+        public UserController(IUserService userService)
         {
             this.userService = userService;
-            this.mapper = mapper;
         }
 
         // GET: api/User/{userId}
@@ -30,15 +28,13 @@ namespace SoundMatchAPI.Controllers
         public async Task<ActionResult<ReturnResponse<UserResponse>>> GetUserById(string userId)
         {
             var returnResponse = await userService.GetUserByIdAsync(userId);
-            switch (returnResponse.StatusCode)
+            return new ReturnResponse<UserResponse>
             {
-                case HttpStatusCode.NotFound:
-                    return NotFound();
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
 
         // PUT: api/User/bio/{userId}
@@ -49,20 +45,22 @@ namespace SoundMatchAPI.Controllers
             var uId = User.FindFirst(CustomClaimTypes.Uid)?.Value; // Id of user that is logged in
             if (uId == null)
             {
-                return Forbid();
+                return new ReturnResponse<UserProfileResponse>
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Errors = new List<string> { "User is not logged in." },
+                    Data = null
+                };
             }
             var returnResponse = await userService.UpdateUserBioAsync(userId, request.Bio, uId);
-            switch (returnResponse.StatusCode)
+            return new ReturnResponse<UserProfileResponse>
             {
-                case HttpStatusCode.Forbidden:
-                    return StatusCode(StatusCodes.Status403Forbidden, returnResponse);
-                case HttpStatusCode.NotFound:
-                    return NotFound();
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
 
         [HttpDelete("{userId}")]
@@ -72,45 +70,34 @@ namespace SoundMatchAPI.Controllers
             var uId = User.FindFirst(CustomClaimTypes.Uid)?.Value; // Id of user that is logged in
             if (uId == null)
             {
-                return Forbid();
+                return new ReturnResponse
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Errors = new List<string> { "User is not logged in." }
+                };
             }
             var returnResponse = await userService.DeleteUserAsync(userId, uId); // 
-            switch (returnResponse.StatusCode)
+            return new ReturnResponse
             {
-                case HttpStatusCode.Forbidden:
-                    return StatusCode(StatusCodes.Status403Forbidden, returnResponse);
-                case HttpStatusCode.NotFound:
-                    return NotFound();
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
 
+        // GET: api/User/profile/{userId}
         [HttpGet("profile/{userId}")]
         public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> GetUserProfile(string userId)
         {
             var returnResponse = await userService.GetUserProfileAsync(userId);
-            switch (returnResponse.StatusCode)
+            return new ReturnResponse<UserProfileResponse>
             {
-                case HttpStatusCode.NotFound:
-                    return NotFound();
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
-
-        //[HttpGet("all-user-profiles")]
-        //public async Task<ActionResult<ReturnResponse<List<UserProfileResponse>>>> GetAllUserProfiles()
-        //{
-        //    var response = await userService.GetAllUsersAsync();
-        //    foreach(var userResponse in response.Data)
-        //    {
-        //        var user = mapper.Map<User(userResponse)>
-        //    }
-        //}
     }
 }

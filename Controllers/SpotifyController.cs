@@ -31,15 +31,22 @@ namespace SoundMatchAPI.Controllers
         public async Task<ActionResult<ReturnResponse<SpotifyAuthorizationUrlResponse>>> Login()
         {
             var returnResponse = await spotifyAuthService.GetAuthorizationUrl();
-            switch (returnResponse.StatusCode)
+            if (returnResponse.Data == null || string.IsNullOrEmpty(returnResponse.Data.AuthorizationUrl))
             {
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    if (returnResponse.Data == null || string.IsNullOrEmpty(returnResponse.Data.AuthorizationUrl))
-                        return StatusCode(StatusCodes.Status500InternalServerError, "Authorization URL is missing.");
-                    return Ok(returnResponse.Data);
+                return new ReturnResponse<SpotifyAuthorizationUrlResponse>
+                {
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    Message = "Failed to get authorization URL.",
+                    Data = null
+                };
             }
+            return new ReturnResponse<SpotifyAuthorizationUrlResponse>
+            {
+                StatusCode = returnResponse.StatusCode,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>(),
+                Data = returnResponse.Data ?? null
+            };
         }
 
         // GET: api/Spotify/callback
@@ -49,25 +56,36 @@ namespace SoundMatchAPI.Controllers
             var user = await userManager.GetUserAsync(User);
             if (user == null)
             {
-                return Forbid();
+                return new ReturnResponse
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Errors = new List<string> { "User is not logged in." }
+                };
             }
             var tokenReturnResponse = await spotifyAuthService.ExchangeCodeAndStoreTokensAsync(user, code);
             if (tokenReturnResponse.StatusCode != HttpStatusCode.OK || tokenReturnResponse.Data == null || string.IsNullOrEmpty(tokenReturnResponse.Data.AccessToken))
-                return StatusCode((int)tokenReturnResponse.StatusCode, tokenReturnResponse);
-
+            {
+                return new ReturnResponse
+                {
+                    StatusCode = tokenReturnResponse.StatusCode,
+                    Message = tokenReturnResponse.Message,
+                    Errors = tokenReturnResponse.Errors
+                };
+            }
             var spotifyDataReturnResponse = await spotifyDataService.ConnectSpotifyAndPopulateMusicAsync(user, tokenReturnResponse.Data.AccessToken);
 
-            switch (spotifyDataReturnResponse.StatusCode)
+            if (spotifyDataReturnResponse.StatusCode == HttpStatusCode.OK)
             {
-                case HttpStatusCode.Forbidden:
-                    return Forbid();
-                case HttpStatusCode.NotFound:
-                    return NotFound(spotifyDataReturnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, spotifyDataReturnResponse);
-                default:
-                    return Redirect($"{configuration["ClientUrl"]}/profile/{user.Id}");
+                return Redirect($"{configuration["ClientUrl"]}/user-profile/{user.Id}");
             }
+
+            return new ReturnResponse
+            {
+                StatusCode = spotifyDataReturnResponse.StatusCode,
+                Message = spotifyDataReturnResponse.Message,
+                Errors = spotifyDataReturnResponse.Errors
+            };
         }
 
         // POST: api/Spotify/refresh-top-items
@@ -76,25 +94,36 @@ namespace SoundMatchAPI.Controllers
         {
             var user = await userManager.GetUserAsync(User);
             if (user == null)
-                return Forbid();
-
+            {
+                return new ReturnResponse<UserProfileResponse>
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Errors = new List<string> { "User is not logged in." },
+                    Data = null
+                };
+            }
             var tokenReturnResponse = await spotifyAuthService.GetAccessTokenAsync(user);
             if (tokenReturnResponse.StatusCode != HttpStatusCode.OK || tokenReturnResponse.Data == null || string.IsNullOrEmpty(tokenReturnResponse.Data.AccessToken))
-                return StatusCode((int)tokenReturnResponse.StatusCode, tokenReturnResponse);
+            {
+                return new ReturnResponse<UserProfileResponse>
+                {
+                    StatusCode = tokenReturnResponse.StatusCode,
+                    Message = tokenReturnResponse.Message,
+                    Errors = tokenReturnResponse.Errors,
+                    Data = null
+                };
+            }
 
             var returnResponse = await spotifyDataService.RefreshTopItemsAsync(user, tokenReturnResponse.Data.AccessToken);
 
-            switch(returnResponse.StatusCode)
+            return new ReturnResponse<UserProfileResponse>
             {
-                case HttpStatusCode.Forbidden:
-                    return Forbid();
-                case HttpStatusCode.NotFound:
-                    return NotFound(returnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
 
         // POST: api/Spotify/refresh-profile
@@ -104,25 +133,37 @@ namespace SoundMatchAPI.Controllers
         {
             var user = await userManager.GetUserAsync(User);
             if (user == null)
-                return Forbid();
+            {
+                return new ReturnResponse<UserProfileResponse>
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Errors = new List<string> { "User is not logged in." },
+                    Data = null
+                };
+            }
 
             var tokenReturnResponse = await spotifyAuthService.GetAccessTokenAsync(user);
             if (tokenReturnResponse.StatusCode != HttpStatusCode.OK || tokenReturnResponse.Data == null || string.IsNullOrEmpty(tokenReturnResponse.Data.AccessToken))
-                return StatusCode((int)tokenReturnResponse.StatusCode, tokenReturnResponse);
+            {
+                return new ReturnResponse<UserProfileResponse>
+                {
+                    StatusCode = tokenReturnResponse.StatusCode,
+                    Message = tokenReturnResponse.Message,
+                    Errors = tokenReturnResponse.Errors,
+                    Data = null
+                };
+            }
 
             var returnResponse = await spotifyDataService.RefreshUserProfileAsync(user, tokenReturnResponse.Data.AccessToken);
 
-            switch(returnResponse.StatusCode)
+            return new ReturnResponse<UserProfileResponse>
             {
-                case HttpStatusCode.Forbidden:
-                    return Forbid();
-                case HttpStatusCode.NotFound:
-                    return NotFound(returnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
-            }
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
     }
 }
