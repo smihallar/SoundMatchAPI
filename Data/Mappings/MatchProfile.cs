@@ -8,7 +8,7 @@ namespace SoundMatchAPI.Data.Mappings
     {
         public MatchProfile()
         {
-            // Mapping from Match (source) to MatchResponse (destination). If null -> empty list
+            // Mapping from Match (source) to MatchResponse (destination) & reversed. If null -> empty list
             CreateMap<Match, MatchResponse>()
                 .ForMember(
                     d => d.MutualSongIds,
@@ -19,6 +19,15 @@ namespace SoundMatchAPI.Data.Mappings
                 .ForMember(
                     d => d.MutualGenreIds,
                     o => o.MapFrom(s => s.MutualGenres != null ? s.MutualGenres.Select(g => g.GenreId).ToList() : new List<string>()))
+                .ForMember(
+                    d => d.MutualSongs,
+                    o => o.MapFrom(s => s.MutualSongs ?? new List<Song>()))
+                .ForMember(
+                    d => d.MutualArtists,
+                    o => o.MapFrom(s => s.MutualArtists ?? new List<Artist>()))
+                .ForMember(
+                    d => d.MutualGenres,
+                    o => o.MapFrom(s => s.MutualGenres ?? new List<Genre>()))
                 .ReverseMap();
         }
     }

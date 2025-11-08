@@ -34,19 +34,23 @@ namespace SoundMatchAPI.Services
         // Save Spotify music data into the database, avoiding duplicates
         public async Task SaveSpotifyMusicAsync(MusicProfile profile)
         {
-            // Upsert genres
-            // 1️⃣ Build a cache of all existing genres
-            var allGenreNames = profile.Genres.Select(g => g.Name).Distinct().ToList();
+            //Build a cache of all existing genres
+            var allGenreNames = profile.Genres
+                .Where(g => !string.IsNullOrEmpty(g.Name))
+                .Select(g => g.Name)
+                .Distinct()
+                .ToList();
+
             var existingGenres = await genreRepository.GetByNamesAsync(allGenreNames);
             var genreLookup = existingGenres.ToDictionary(g => g.Name, g => g, StringComparer.OrdinalIgnoreCase);
 
-            // 2️⃣ Upsert missing genres
-            foreach (var genre in profile.Genres)
+            // Upsert missing genres
+            foreach (var genre in profile.Genres.Where(g => !string.IsNullOrEmpty(g.Name)))
             {
-                if (!genreLookup.TryGetValue(genre.Name, out var trackedGenre))
+                if (!genreLookup.TryGetValue(genre.Name, out var trackedGenre) || trackedGenre == null)
                 {
                     await genreRepository.AddAsync(genre);
-                    genreLookup[genre.Name] = genre; // Add it to the cache for reuse
+                    genreLookup[genre.Name] = genre;
                 }
                 else
                 {
@@ -54,41 +58,44 @@ namespace SoundMatchAPI.Services
                 }
             }
 
-            // 3️⃣ When attaching genres to artists
+            // 3Upsert artists
             foreach (var artist in profile.Artists)
             {
                 var existingArtist = await artistRepository.GetBySpotifyIdAsync(artist.SpotifyId);
+
+                // Attach tracked genres safely
+                artist.Genres = (artist.Genres ?? new List<Genre>())
+                    .Where(g => !string.IsNullOrEmpty(g.Name) && genreLookup.ContainsKey(g.Name))
+                    .Select(g => genreLookup[g.Name])
+                    .ToList();
+
                 if (existingArtist == null)
                 {
-                    // Replace artist.Genres with cached/tracked instances
-                    artist.Genres = artist.Genres
-                        .Where(g => genreLookup.ContainsKey(g.Name))
-                        .Select(g => genreLookup[g.Name])
-                        .ToList();
-
                     await artistRepository.AddAsync(artist);
                 }
                 else
                 {
                     bool needsUpdate = false;
 
-                    // Update image, popularity, etc.
                     if (existingArtist.Popularity != artist.Popularity)
                     {
                         existingArtist.Popularity = artist.Popularity;
                         needsUpdate = true;
                     }
 
+                    if (existingArtist.ArtistImageUrl != artist.ArtistImageUrl)
+                    {
+                        existingArtist.ArtistImageUrl = artist.ArtistImageUrl;
+                        needsUpdate = true;
+                    }
+
                     // Add missing genres
                     foreach (var g in artist.Genres)
                     {
-                        if (genreLookup.TryGetValue(g.Name, out var trackedGenre))
+                        if (!existingArtist.Genres.Any(x => x.GenreId == g.GenreId))
                         {
-                            if (!existingArtist.Genres.Any(x => x.GenreId == trackedGenre.GenreId))
-                            {
-                                existingArtist.Genres.Add(trackedGenre);
-                                needsUpdate = true;
-                            }
+                            existingArtist.Genres.Add(g);
+                            needsUpdate = true;
                         }
                     }
 
@@ -98,68 +105,69 @@ namespace SoundMatchAPI.Services
             }
 
             // Upsert songs
-            // 3️⃣ Upsert songs
             foreach (var song in profile.Songs)
             {
                 var existingSong = await songRepository.GetBySpotifyIdAsync(song.SpotifyId);
                 bool isNewSong = existingSong == null;
 
-                // Always use tracked artist instances
+                // Track artists safely
                 var trackedArtists = new List<Artist>();
-                foreach (var artist in song.Artists)
+                foreach (var artist in song.Artists ?? new List<Artist>())
                 {
                     var tracked = await artistRepository.GetBySpotifyIdAsync(artist.SpotifyId);
-                    if (tracked != null)
-                        trackedArtists.Add(tracked);
+                    if (tracked == null)
+                    {
+                        // Attach genres safely
+                        artist.Genres = (artist.Genres ?? new List<Genre>())
+                            .Where(g => !string.IsNullOrEmpty(g.Name) && genreLookup.ContainsKey(g.Name))
+                            .Select(g => genreLookup[g.Name])
+                            .ToList();
+
+                        await artistRepository.AddAsync(artist);
+                        tracked = artist;
+                    }
+
+                    trackedArtists.Add(tracked);
                 }
 
                 if (isNewSong)
                 {
-                    // Attach tracked artists
                     song.Artists = trackedArtists;
-
                     await songRepository.AddAsync(song);
                 }
                 else
                 {
                     bool needsUpdate = false;
 
-                    // Update album art if changed
-                    if (string.IsNullOrEmpty(existingSong.AlbumImageUrl) ||
-                        existingSong.AlbumImageUrl != song.AlbumImageUrl)
+                    if (string.IsNullOrEmpty(existingSong.AlbumImageUrl) || existingSong.AlbumImageUrl != song.AlbumImageUrl)
                     {
                         existingSong.AlbumImageUrl = song.AlbumImageUrl;
                         needsUpdate = true;
                     }
 
-                    // Update popularity if changed
                     if (existingSong.Popularity != song.Popularity)
                     {
                         existingSong.Popularity = song.Popularity;
                         needsUpdate = true;
                     }
 
-                    // Compare and update artist relationships
+                    // Update artist relationships
                     var existingArtistIds = existingSong.Artists.Select(a => a.ArtistId).OrderBy(x => x).ToList();
                     var newArtistIds = trackedArtists.Select(a => a.ArtistId).OrderBy(x => x).ToList();
 
                     if (!existingArtistIds.SequenceEqual(newArtistIds))
                     {
-                        // Replace with tracked artist references
                         existingSong.Artists.Clear();
-                        foreach (var a in trackedArtists)
-                            existingSong.Artists.Add(a);
-
+                        existingSong.Artists.AddRange(trackedArtists);
                         needsUpdate = true;
                     }
 
                     if (needsUpdate)
-                    {
                         await songRepository.UpdateAsync(existingSong);
-                    }
                 }
             }
         }
+
 
         public async Task<List<Song>?> GetSongBySpotifyIdsAsync(List<string> spotifyIds)
         {
@@ -180,11 +188,11 @@ namespace SoundMatchAPI.Services
             var artists = new List<Artist>();
             foreach (var id in spotifyIds)
             {
-               var artist = await artistRepository.GetBySpotifyIdAsync(id);
-               if (artist != null)
-               {
-                   artists.Add(artist);
-               }
+                var artist = await artistRepository.GetBySpotifyIdAsync(id);
+                if (artist != null)
+                {
+                    artists.Add(artist);
+                }
             }
             return artists;
         }

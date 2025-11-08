@@ -150,12 +150,13 @@ namespace SoundMatchAPI.Services
                         Errors = new List<string> { "No user found." }
                     };
                 }
-
-                var musicProfile = await musicService.GetProfileAsync(user.FavoriteSongIds, user.FavoriteArtistIds, user.FavoriteGenreIds); // Get current music profile
-                user.FavoriteSongs = musicProfile.Songs.ToList();
-                user.FavoriteArtists = musicProfile.Artists.ToList();
-                user.FavoriteGenres = musicProfile.Genres.ToList();
-
+                if (user.IsConnectedToSpotify)
+                {
+                    var musicProfile = await musicService.GetProfileAsync(user.FavoriteSongIds, user.FavoriteArtistIds, user.FavoriteGenreIds); // Get current music profile
+                    user.FavoriteSongs = musicProfile.Songs.ToList();
+                    user.FavoriteArtists = musicProfile.Artists.ToList();
+                    user.FavoriteGenres = musicProfile.Genres.ToList();
+                }
                 var userProfileResponse = mapper.Map<UserProfileResponse>(user);
                 return new ReturnResponse<UserProfileResponse>
                 {

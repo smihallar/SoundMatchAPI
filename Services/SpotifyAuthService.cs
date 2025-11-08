@@ -26,6 +26,15 @@ namespace SoundMatchAPI.Services
         {
             try
             {
+                if(user.IsConnectedToSpotify)
+                {
+                    return new ReturnResponse<SpotifyTokenResponse>
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        Message = "User is already connected to Spotify.",
+                        Errors = new List<string> { "Spotify account is already linked." }
+                    };
+                }
                 var clientId = config["Spotify:ClientId"];
                 var clientSecret = config["Spotify:ClientSecret"];
                 var redirectUri = config["Spotify:RedirectUri"];
@@ -123,14 +132,14 @@ namespace SoundMatchAPI.Services
 
 
         // Generates the Spotify authorization URL, including client ID, redirect URI and scopes from configuration
-        public async Task<ReturnResponse<SpotifyAuthorizationUrlResponse>> GetAuthorizationUrl()
+        public async Task<ReturnResponse<SpotifyAuthorizationUrlResponse>> GetAuthorizationUrl(string userId)
         {
             try
             {
                 var clientId = config["Spotify:ClientId"] ?? string.Empty;
                 var redirectUri = Uri.EscapeDataString(config["Spotify:RedirectUri"] ?? string.Empty);
                 var scopes = Uri.EscapeDataString(config["Spotify:Scopes"] ?? string.Empty);
-                var state = Guid.NewGuid().ToString(); // Unique state for CSRF protection
+                var state = userId; // user id to keep track of logged in user sending the request
 
                 // Force Spotify to show the login/authorization dialog
                 var showDialog = "true";

@@ -81,7 +81,7 @@ namespace SoundMatchAPI.Services
                     {
                         Data = null,
                         StatusCode = System.Net.HttpStatusCode.BadRequest,
-                        Errors = new List<string> { "Wrong email or password." },
+                        Errors = new List<string> { "Wrong email or password.", "If you do not already have an account, please register." },
                         Message = "Authentication failed."
                     };
                 }

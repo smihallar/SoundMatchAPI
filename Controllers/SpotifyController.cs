@@ -6,6 +6,7 @@ using SoundMatchAPI.Data.DTOs.Responses.SpotifyAPIResponses;
 using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
 using System.Net;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SoundMatchAPI.Controllers
 {
@@ -26,11 +27,11 @@ namespace SoundMatchAPI.Controllers
             this.configuration = configuration;
         }
 
-        // GET: api/Spotify/login
-        [HttpGet("login")]
-        public async Task<ActionResult<ReturnResponse<SpotifyAuthorizationUrlResponse>>> Login()
+        // GET: api/Spotify/login/{userId}
+        [HttpGet("login/{userId}")]
+        public async Task<ActionResult<ReturnResponse<SpotifyAuthorizationUrlResponse>>> Login(string userId)
         {
-            var returnResponse = await spotifyAuthService.GetAuthorizationUrl();
+            var returnResponse = await spotifyAuthService.GetAuthorizationUrl(userId);
             if (returnResponse.Data == null || string.IsNullOrEmpty(returnResponse.Data.AuthorizationUrl))
             {
                 return new ReturnResponse<SpotifyAuthorizationUrlResponse>
@@ -51,27 +52,27 @@ namespace SoundMatchAPI.Controllers
 
         // GET: api/Spotify/callback
         [HttpGet("callback")]
-        public async Task<ActionResult<ReturnResponse>> Callback([FromQuery] string code, [FromQuery] string state)
+        public async Task<ActionResult> Callback([FromQuery] string code, [FromQuery] string state)
         {
-            var user = await userManager.GetUserAsync(User);
+            var user = await userManager.FindByIdAsync(state);
             if (user == null)
             {
-                return new ReturnResponse
-                {
-                    StatusCode = HttpStatusCode.Forbidden,
-                    Message = "Log in to access this resource.",
-                    Errors = new List<string> { "User is not logged in." }
-                };
+                var notFoundStatusCode = HttpStatusCode.NotFound;
+                var notFoundMessage = "User could not be found";
+                return Redirect($"{configuration["ClientUrl"]}/error?code={(int)notFoundStatusCode}&message={Uri.EscapeDataString(notFoundMessage)}");
+            }
+            if(user.IsConnectedToSpotify)
+            {
+                var forbiddenStatusCode = HttpStatusCode.Forbidden;
+                var forbiddenMessage = "User is already connected to Spotify.";
+                return Redirect($"{configuration["ClientUrl"]}/error?code={(int)forbiddenStatusCode}&message={Uri.EscapeDataString(forbiddenMessage)}");
             }
             var tokenReturnResponse = await spotifyAuthService.ExchangeCodeAndStoreTokensAsync(user, code);
             if (tokenReturnResponse.StatusCode != HttpStatusCode.OK || tokenReturnResponse.Data == null || string.IsNullOrEmpty(tokenReturnResponse.Data.AccessToken))
             {
-                return new ReturnResponse
-                {
-                    StatusCode = tokenReturnResponse.StatusCode,
-                    Message = tokenReturnResponse.Message,
-                    Errors = tokenReturnResponse.Errors
-                };
+                var tokenStatusCode = tokenReturnResponse.StatusCode;
+                var tokenMessage = tokenReturnResponse.Message;
+                return Redirect($"{configuration["ClientUrl"]}/error?code={(int)tokenStatusCode}&message={Uri.EscapeDataString(tokenMessage)}");
             }
             var spotifyDataReturnResponse = await spotifyDataService.ConnectSpotifyAndPopulateMusicAsync(user, tokenReturnResponse.Data.AccessToken);
 
@@ -80,12 +81,11 @@ namespace SoundMatchAPI.Controllers
                 return Redirect($"{configuration["ClientUrl"]}/user-profile/{user.Id}");
             }
 
-            return new ReturnResponse
-            {
-                StatusCode = spotifyDataReturnResponse.StatusCode,
-                Message = spotifyDataReturnResponse.Message,
-                Errors = spotifyDataReturnResponse.Errors
-            };
+            var statusCode = spotifyDataReturnResponse.StatusCode;
+            var message = spotifyDataReturnResponse.Message;
+            var errors = spotifyDataReturnResponse.Errors;
+
+            return Redirect($"{configuration["ClientUrl"]}/error?code={(int)statusCode}&message={Uri.EscapeDataString(message)}");
         }
 
         // POST: api/Spotify/refresh-top-items

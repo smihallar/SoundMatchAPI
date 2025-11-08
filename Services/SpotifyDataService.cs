@@ -30,6 +30,7 @@ namespace SoundMatchAPI.Services
         {
             try
             {
+                
                 // Fetch user profile
                 var profileResponse = await RefreshUserProfileAsync(user, accessToken);
                 if (profileResponse.StatusCode != HttpStatusCode.OK) return profileResponse;
@@ -70,8 +71,8 @@ namespace SoundMatchAPI.Services
                     };
                 }
 
-                //Fetch top 50 artists, long term (1 year)
-                var artistsRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=50&offset=0");
+                //Fetch top 30 artists, short term (4 weeks)
+                var artistsRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/artists?time_range=short_term&limit=30&offset=0");
                 artistsRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 var artistsResponse = await httpClient.SendAsync(artistsRequest);
                 artistsResponse.EnsureSuccessStatusCode();
@@ -82,8 +83,8 @@ namespace SoundMatchAPI.Services
                     PropertyNameCaseInsensitive = true
                 });
 
-                // Fetch top 50 tracks, long term (1 year)
-                var tracksRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/tracks?time_range=long_term&limit=50&offset=0");
+                // Fetch top 50 tracks, short term (4 weeks)
+                var tracksRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=50&offset=0");
                 tracksRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 var tracksResponse = await httpClient.SendAsync(tracksRequest);
                 tracksResponse.EnsureSuccessStatusCode();
