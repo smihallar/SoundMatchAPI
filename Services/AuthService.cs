@@ -9,6 +9,7 @@ using SoundMatchAPI.Data.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using static System.Net.WebRequestMethods;
 
 namespace SoundMatchAPI.Services
 {
@@ -39,6 +40,7 @@ namespace SoundMatchAPI.Services
                 }
                 var newUser = new User
                 {
+                    ProfilePictureUrl = "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
                     Email = request.Email,
                     UserName = request.Email // When not connected to Spotify, username is the email
                 };

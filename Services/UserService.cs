@@ -115,9 +115,8 @@ namespace SoundMatchAPI.Services
                         Errors = new List<string> { "No user found to delete." }
                     };
                 }
-
-                await userRepository.DeleteAsync(userId);
                 await matchRepository.DeleteMatchesByUserIdAsync(userId);
+                await userRepository.DeleteAsync(userId);
                 return new ReturnResponse
                 {
                     StatusCode = HttpStatusCode.NoContent,
@@ -189,7 +188,7 @@ namespace SoundMatchAPI.Services
                         StatusCode = HttpStatusCode.Forbidden
                     };
                 }
-                var user = await userRepository.GetByIdAsync(userId);
+                var user = await userRepository.GetUserWithFavoriteMusic(userId);
                 if (user == null)
                 {
                     return new ReturnResponse<UserProfileResponse>

@@ -226,10 +226,13 @@ namespace SoundMatchAPI.Services
                 });
                 if (spotifyUser == null) throw new Exception("Failed to fetch Spotify user profile.");
 
+                var spotifyProfileUrl = spotifyUser.Images?.FirstOrDefault()?.Url ?? string.Empty;
+
                 // Update user entity
                 user.SpotifyUserId = spotifyUser.Id;
+                user.UserName = spotifyUser.Id;
                 user.CountryCode = spotifyUser.Country;
-                user.ProfilePictureUrl = spotifyUser.Images?.FirstOrDefault()?.Url ?? string.Empty;
+                if(!string.IsNullOrWhiteSpace(spotifyProfileUrl)) { user.ProfilePictureUrl = spotifyProfileUrl; } // user has a standard profile pic, should not be overwritten
                 user.UserDetailsLastRefreshed = DateTime.UtcNow;
 
                 await userRepository.UpdateAsync(user);

@@ -181,7 +181,8 @@ namespace SoundMatchAPI.Services
             int totalScore = CalculateTotalScore(mutualSongs, mutualArtists, mutualGenres);
             if (totalScore == 0) return (null, null);
 
-            var existingMatch = await matchRepository.GetExistingMatchAsync(initiatorUser.Id, candidate.Id);
+            var existingMatch = await matchRepository.GetExistingMatchAsync(initiatorUser.Id, candidate.Id)
+                ?? await matchRepository.GetExistingMatchAsync(candidate.Id, initiatorUser.Id);
             if (existingMatch != null)
             {
                 UpdateExistingMatch(existingMatch, mutualSongs, mutualArtists, mutualGenres);
@@ -192,6 +193,8 @@ namespace SoundMatchAPI.Services
             var match = CreateNewMatch(initiatorUser, candidate, mutualSongs, mutualArtists, mutualGenres, totalScore);
             candidate.MatchIdsAsRecipient.Add(match.MatchId);
             candidate.MatchIdsAsRecipient = candidate.MatchIdsAsRecipient.Distinct().ToList();
+            candidate.MatchesAsRecipient.Add(match);
+            candidate.MatchesAsRecipient = candidate.MatchesAsRecipient.Distinct().ToList();
             await userRepository.UpdateAsync(candidate);
 
             return (match, null);
@@ -285,6 +288,7 @@ namespace SoundMatchAPI.Services
                     .Where(m => m != null)
                     .Select(m => mapper.Map<MatchResponse>(m))
                     .ToList();
+                
                 return new ReturnResponse<List<MatchResponse>>
                 {
                     StatusCode = HttpStatusCode.OK,
