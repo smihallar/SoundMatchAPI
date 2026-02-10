@@ -90,16 +90,16 @@ namespace SoundMatchAPI.Controllers
 
         // POST: api/Spotify/refresh-top-items
         [HttpPost("refresh-top-items")]
-        public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> RefreshTopItems()
+        public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> RefreshTopItems(string userId)
         {
-            var user = await userManager.GetUserAsync(User);
+            var user = await userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return new ReturnResponse<UserProfileResponse>
                 {
-                    StatusCode = HttpStatusCode.Forbidden,
-                    Message = "Log in to access this resource.",
-                    Errors = new List<string> { "User is not logged in." },
+                    StatusCode = HttpStatusCode.NotFound,
+                    Message = "User not found.",
+                    Errors = new List<string> { "User not found." },
                     Data = null
                 };
             }
@@ -129,16 +129,16 @@ namespace SoundMatchAPI.Controllers
         // POST: api/Spotify/refresh-profile
         [HttpPost("refresh-profile")]
         [Authorize]
-        public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> RefreshProfile()
+        public async Task<ActionResult<ReturnResponse<UserProfileResponse>>> RefreshProfile(string userId)
         {
-            var user = await userManager.GetUserAsync(User);
+            var user = await userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return new ReturnResponse<UserProfileResponse>
                 {
-                    StatusCode = HttpStatusCode.Forbidden,
-                    Message = "Log in to access this resource.",
-                    Errors = new List<string> { "User is not logged in." },
+                    StatusCode = HttpStatusCode.NotFound,
+                    Message = "User not found.",
+                    Errors = new List<string> { "User not found." },
                     Data = null
                 };
             }

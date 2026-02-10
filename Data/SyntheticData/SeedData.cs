@@ -77,7 +77,7 @@ namespace SoundMatchAPI.Data.SyntheticData
             ctx.Artists.AddRange(artistLookup.Values);
             await ctx.SaveChangesAsync();
 
-            // Now load Songs and connect existing artists
+            // Load Songs and connect existing artists
             var songs = new List<Song>();
             var songLookup = new HashSet<string>();
 
