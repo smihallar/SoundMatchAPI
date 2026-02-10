@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
 using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data.Repositories
@@ -16,6 +16,20 @@ namespace SoundMatchAPI.Data.Repositories
         {
             return await ctx.Genres
                 .Where(g => genreIds.Contains(g.GenreId))
+                .ToListAsync();
+        }
+
+        public async Task<Genre?> GetByNameAsync(string name) // Used to compare to JSON from Spotify
+        {
+            return await ctx.Genres
+                .FirstOrDefaultAsync(g => g.Name.ToLower() == name.ToLower());
+        }
+
+        public async Task<IEnumerable<Genre>> GetByNamesAsync(IEnumerable<string> genreNames)
+        {
+            var lowerNames = genreNames.Select(n => n.ToLower()).ToList();
+            return await ctx.Genres
+                .Where(g => lowerNames.Contains(g.Name.ToLower()))
                 .ToListAsync();
         }
     }

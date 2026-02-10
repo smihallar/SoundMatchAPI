@@ -308,9 +308,12 @@ namespace SoundMatchAPI.Migrations
 
                     b.Property<string>("SpotifyId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("ArtistId");
+
+                    b.HasIndex("SpotifyId")
+                        .IsUnique();
 
                     b.ToTable("Artists");
                 });
@@ -320,7 +323,14 @@ namespace SoundMatchAPI.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("MatchId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("MatchId")
+                        .IsUnique();
 
                     b.ToTable("Chats");
                 });
@@ -332,9 +342,12 @@ namespace SoundMatchAPI.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("GenreId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Genres");
                 });
@@ -343,6 +356,10 @@ namespace SoundMatchAPI.Migrations
                 {
                     b.Property<string>("MatchId")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ChatId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CompatibilityScore")
                         .HasColumnType("int");
@@ -410,13 +427,16 @@ namespace SoundMatchAPI.Migrations
 
                     b.Property<string>("SpotifyId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SongId");
+
+                    b.HasIndex("SpotifyId")
+                        .IsUnique();
 
                     b.ToTable("Songs");
                 });
@@ -526,6 +546,9 @@ namespace SoundMatchAPI.Migrations
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime>("UserDetailsLastRefreshed")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
@@ -730,6 +753,15 @@ namespace SoundMatchAPI.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SoundMatchAPI.Data.Models.Chat", b =>
+                {
+                    b.HasOne("SoundMatchAPI.Data.Models.Match", null)
+                        .WithOne()
+                        .HasForeignKey("SoundMatchAPI.Data.Models.Chat", "MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SoundMatchAPI.Data.Models.Match", b =>
                 {
                     b.HasOne("SoundMatchAPI.Data.Models.User", "InitiatorUser")
@@ -760,7 +792,7 @@ namespace SoundMatchAPI.Migrations
                     b.HasOne("SoundMatchAPI.Data.Models.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Chat");

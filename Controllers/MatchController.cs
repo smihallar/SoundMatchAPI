@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SoundMatchAPI.Data.Interfaces;
-using SoundMatchAPI.Services;
+using SoundMatchAPI.Constants;
+using SoundMatchAPI.Data.DTOs.Responses;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using System.Net;
 
 namespace SoundMatchAPI.Controllers
@@ -19,67 +21,104 @@ namespace SoundMatchAPI.Controllers
 
         // GET: api/Match/{matchId}
         [HttpGet("{matchId}")]
-        public async Task<IActionResult> GetMatch(string matchId)
+        [Authorize]
+        public async Task<ActionResult<ReturnResponse<MatchResponse>>> GetMatch(string matchId)
         {
-            var returnResponse = await matchService.GetMatchByIdWithDetailsAsync(matchId);
-
-            switch (returnResponse.StatusCode)
+            var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
+            if (loggedInUserId == null)
             {
-                case HttpStatusCode.NotFound:
-                    return NotFound(returnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
+                return new ReturnResponse<MatchResponse>
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Data = null,
+                    Errors = new List<string> { "User is not logged in." }
+                };
             }
+            var returnResponse = await matchService.GetMatchByIdWithDetailsAsync(matchId, loggedInUserId);
+            return new ReturnResponse<MatchResponse>
+            {
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
 
         // Find and create new matches for a user
-        // POST: api/Match/all/{userId}
-        [HttpPost("all/{userId}")]
-        public async Task<IActionResult> FindMatches(string userId)
+        // POST: api/Match/find-matches/{userId}
+        [HttpPost("find-matches/{userId}")]
+        //[Authorize]
+        public async Task<ActionResult<ReturnResponse<List<MatchResponse>>>> FindMatches(string userId)
         {
-            var returnResponse = await matchService.AddMatches(userId);
-            switch (returnResponse.StatusCode)
+            var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
+            if (loggedInUserId == null)
             {
-                case HttpStatusCode.NotFound:
-                    return NotFound(returnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
+                return new ReturnResponse<List<MatchResponse>>
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Data = null,
+                    Errors = new List<string> { "User is not logged in." }
+                };
             }
+            var returnResponse = await matchService.AddMatches(userId, loggedInUserId);
+            return new ReturnResponse<List<MatchResponse>>
+            {
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
 
         // GET: api/Match/all/{userId}   
         [HttpGet("all/{userId}")]
-        public async Task<IActionResult> GetAllMatches(string userId)
+        [Authorize]
+        public async Task<ActionResult<ReturnResponse<List<MatchResponse>>>> GetAllMatches(string userId)
         {
-            var returnResponse = await matchService.GetMatchesByUserIdAsync(userId);
-            switch (returnResponse.StatusCode)
+            var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
+            if (loggedInUserId == null)
             {
-                case HttpStatusCode.NotFound:
-                    return NotFound(returnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Data);
+                return new ReturnResponse<List<MatchResponse>>
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Data = null,
+                    Errors = new List<string> { "User is not logged in." }
+                };
             }
+            var returnResponse = await matchService.GetMatchesByUserIdAsync(userId, loggedInUserId);
+            return new ReturnResponse<List<MatchResponse>>
+            {
+                StatusCode = returnResponse.StatusCode,
+                Data = returnResponse.Data ?? null,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
 
         [HttpDelete("{matchId}")]
-        public async Task<IActionResult> DeleteMatch(string matchId)
+        [Authorize]
+        public async Task<ActionResult<ReturnResponse>> DeleteMatch(string matchId)
         {
-            var returnResponse = await matchService.DeleteMatchAsync(matchId);
-            switch (returnResponse.StatusCode)
+            var loggedInUserId = User.FindFirst(CustomClaimTypes.Uid)?.Value;
+            if (loggedInUserId == null)
             {
-                case HttpStatusCode.NotFound:
-                    return NotFound(returnResponse);
-                case HttpStatusCode.InternalServerError:
-                    return StatusCode(StatusCodes.Status500InternalServerError, returnResponse);
-                default:
-                    return Ok(returnResponse.Message);
+                return new ReturnResponse
+                {
+                    StatusCode = HttpStatusCode.Forbidden,
+                    Message = "Log in to access this resource.",
+                    Errors = new List<string> { "User is not logged in." }
+                };
             }
+            var returnResponse = await matchService.DeleteMatchAsync(matchId, loggedInUserId);
+            return new ReturnResponse
+            {
+                StatusCode = returnResponse.StatusCode,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>()
+            };
         }
     }
 }

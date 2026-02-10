@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
 using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data.Repositories
@@ -12,22 +12,26 @@ namespace SoundMatchAPI.Data.Repositories
             this.ctx = ctx;
         }
 
-        //public async Task<User?> GetUserWithDetailsAsync(string id)
-        //{
-        //    return await ctx.Users
-        //        .Include(u => u.FavoriteSongIds)
-        //        .Include(u => u.FavoriteArtistIds)
-        //        .Include(u => u.FavoriteGenreIds)
-        //        .FirstOrDefaultAsync(u => u.Id == id);
-        //}
+        public async Task UpdateUserWithSpotifyAuthDetailsAsync(string userId, string? refreshToken, DateTime? tokenExpiresAt)
+        {
+            var user = await ctx.Users.FindAsync(userId);
+            if (user != null)
+            {
+                user.IsConnectedToSpotify = true;
+                user.SpotifyRefreshToken = refreshToken;
+                user.SpotifyTokenExpiresAt = tokenExpiresAt;
+                ctx.Users.Update(user);
+                await ctx.SaveChangesAsync();
+            }
+        }
 
-        //public async Task<IEnumerable<User?>> GetAllUsersWithDetailsAsync()
-        //{
-        //    return await ctx.Users
-        //        .Include(u => u.FavoriteSongIds)
-        //        .Include(u => u.FavoriteArtistIds)
-        //        .Include(u => u.FavoriteGenreIds)
-        //        .ToListAsync();
-        //}
+        public async Task<User?> GetUserWithFavoriteMusic(string userId)
+        {
+            return await ctx.Users
+                .Include(u=>u.FavoriteArtists)
+                .Include(u=>u.FavoriteSongs)
+                .Include(u=>u.FavoriteGenres)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+        }
     }
 }

@@ -21,6 +21,12 @@ namespace SoundMatchAPI.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Song>()
+                .HasIndex(s => s.SpotifyId)
+                .IsUnique();
+            modelBuilder.Entity<Artist>()
+                .HasIndex(a => a.SpotifyId)
+                .IsUnique();
             modelBuilder.Entity<Match>()
                 .HasOne(m => m.InitiatorUser)
                 .WithMany(u => u.MatchesAsInitiator)
@@ -39,7 +45,7 @@ namespace SoundMatchAPI.Data
 
             modelBuilder.Entity<Match>()
                 .HasMany(m => m.MutualArtists)
-                .WithMany(); 
+                .WithMany();
 
             modelBuilder.Entity<Match>()
                 .HasMany(m => m.MutualGenres)
@@ -64,6 +70,31 @@ namespace SoundMatchAPI.Data
             modelBuilder.Entity<Artist>()
                 .HasMany(s => s.Genres)
                 .WithMany();
+            modelBuilder.Entity<Chat>()
+                .HasMany(c => c.Participants)
+                .WithMany(u => u.Chats);
+
+            modelBuilder.Entity<Chat>()
+                .HasMany(c => c.Messages)
+                .WithOne(m => m.Chat)
+                .HasForeignKey(m => m.ChatId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Optional: if you want a chat linked to a match
+            modelBuilder.Entity<Chat>()
+                .HasOne<Match>()
+                .WithOne()
+                .HasForeignKey<Chat>(c => c.MatchId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Genre>()
+                .HasIndex(g => g.Name)
+                .IsUnique();
         }
-    } 
+    }
 }

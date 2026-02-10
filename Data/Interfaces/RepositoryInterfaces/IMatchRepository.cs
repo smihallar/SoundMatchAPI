@@ -1,6 +1,6 @@
 ﻿using SoundMatchAPI.Data.Models;
 
-namespace SoundMatchAPI.Data.Interfaces
+namespace SoundMatchAPI.Data.Interfaces.RepositoryInterfaces
 {
     public interface IMatchRepository : IRepository<Match>
     {
@@ -8,5 +8,6 @@ namespace SoundMatchAPI.Data.Interfaces
         Task<Match?> GetMatchWithDetailsByIdAsync(string matchId);
         Task AddMatchesAsync(IEnumerable<Match> matches);
         Task DeleteMatchesByUserIdAsync(string userId);
+        Task<Match?> GetExistingMatchAsync(string initiatorId, string recipientId);
     }
 }

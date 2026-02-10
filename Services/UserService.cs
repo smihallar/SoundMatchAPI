@@ -2,7 +2,8 @@
 using Azure;
 using SoundMatchAPI.Data.DTOs.Requests;
 using SoundMatchAPI.Data.DTOs.Responses;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
 using System.Net;
 
@@ -11,19 +12,19 @@ namespace SoundMatchAPI.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository userRepository;
-        private readonly IMusicProfileService musicProfileService;
+        private readonly IMusicService musicService;
         private readonly IMatchRepository matchRepository;
         private readonly IMapper mapper;
 
-        public UserService(IUserRepository userRepository, IMusicProfileService musicProfileService, IMatchRepository matchRepository, IMapper mapper)
+        public UserService(IUserRepository userRepository, IMusicService musicService, IMatchRepository matchRepository, IMapper mapper)
         {
             this.userRepository = userRepository;
-            this.musicProfileService = musicProfileService;
+            this.musicService = musicService;
             this.matchRepository = matchRepository;
             this.mapper = mapper;
         }
 
-        public async Task<ReturnResponse<IEnumerable<UserResponse>>> GetAllUsersAsync()
+        public async Task<ReturnResponse<List<UserResponse>>> GetAllUsersAsync()
         {
             try
             {
@@ -31,27 +32,26 @@ namespace SoundMatchAPI.Services
 
                 if (users == null)
                 {
-                    return new ReturnResponse<IEnumerable<UserResponse>>
+                    return new ReturnResponse<List<UserResponse>>
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "An error occurred while fetching users",
                         Errors = new List<string> { "No users found." }
                     };
                 }
-                var userResponses = new List<UserResponse>();
-                foreach (var user in users)
-                {
-                    mapper.Map(user, userResponses);
-                }
-                return new ReturnResponse<IEnumerable<UserResponse>>
+                // Map each user to a UserResponse
+                var userResponses = users.Select(user => mapper.Map<UserResponse>(user)).ToList();
+
+                return new ReturnResponse<List<UserResponse>>
                 {
                     Data = userResponses,
-                    StatusCode = HttpStatusCode.OK
+                    StatusCode = HttpStatusCode.OK,
+                    Message = "Users fetched successfully."
                 };
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<IEnumerable<UserResponse>>
+                return new ReturnResponse<List<UserResponse>>
                 {
                     Message = "An unexpected error occurred.",
                     Errors = new List<string> { $"Error: {ex.Message}" },
@@ -59,14 +59,14 @@ namespace SoundMatchAPI.Services
                 };
             }
         }
-        public async Task<ReturnResponse<UserResponse?>> GetUserByIdAsync(string id)
+        public async Task<ReturnResponse<UserResponse>> GetUserByIdAsync(string id)
         {
             try
             {
                 var user = await userRepository.GetByIdAsync(id);
                 if (user == null)
                 {
-                    return new ReturnResponse<UserResponse?>
+                    return new ReturnResponse<UserResponse>
                     {
                         StatusCode = HttpStatusCode.NotFound,
                         Message = "An error occurred while fetching user.",
@@ -74,17 +74,18 @@ namespace SoundMatchAPI.Services
                     };
                 }
                 var userResponse = mapper.Map<UserResponse>(user);
-                return new ReturnResponse<UserResponse?>
+                return new ReturnResponse<UserResponse>
                 {
                     StatusCode = HttpStatusCode.OK,
                     Data = userResponse,
+                    Message = "User fetched successfully."
                 };
             }
             catch (Exception ex)
             {
-                return new ReturnResponse<UserResponse?>
+                return new ReturnResponse<UserResponse>
                 {
-                    Message = "Ett oväntat fel har inträffat.",
+                    Message = "An unexpected error occurred.",
                     Errors = new List<string> { $"Error: {ex.Message}" },
                     StatusCode = HttpStatusCode.InternalServerError
                 };
@@ -109,61 +110,31 @@ namespace SoundMatchAPI.Services
                 {
                     return new ReturnResponse
                     {
-                        StatusCode = HttpStatusCode.NotFound
+                        StatusCode = HttpStatusCode.NotFound,
+                        Message = "Something went wrong while deleting user.",
+                        Errors = new List<string> { "No user found to delete." }
                     };
                 }
-
-                await userRepository.DeleteAsync(userId);
                 await matchRepository.DeleteMatchesByUserIdAsync(userId);
+                await userRepository.DeleteAsync(userId);
                 return new ReturnResponse
                 {
-                    StatusCode = HttpStatusCode.NoContent
+                    StatusCode = HttpStatusCode.NoContent,
+                    Message = "User deleted successfully."
                 };
             }
             catch (Exception ex)
             {
                 return new ReturnResponse
                 {
-                    Message = "An error occurred while deleting user",
+                    Message = "An unexpected error occurred while deleting user",
                     Errors = new List<string> { $"Error: {ex.Message}." },
                     StatusCode = HttpStatusCode.InternalServerError
                 };
             }
         }
 
-        // Connect to spotify (update user with spotify information + set IsConnectedToSpotify to true)
-        public async Task<ReturnResponse> ConnectUserToSpotifyAsync(string userId)
-        {
-            try
-            {
-                var user = await userRepository.GetByIdAsync(userId);
-                if (user == null)
-                {
-                    return new ReturnResponse
-                    {
-                        Message = "An error has occurred while fetching user",
-                        Errors = new List<string> { "User not found" },
-                        StatusCode = HttpStatusCode.BadRequest
-                    };
-                }
-                user.IsConnectedToSpotify = true;
-                await userRepository.UpdateAsync(user);
-                return new ReturnResponse
-                {
-                    StatusCode = HttpStatusCode.NoContent
-                };
-            }
-            catch (Exception ex)
-            {
-                return new ReturnResponse
-                {
-                    Message = "An error occurred while connecting user to Spotify",
-                    Errors = new List<string> { $"Error: {ex.Message}." },
-                    StatusCode = HttpStatusCode.InternalServerError
-                };
-            }
-        }
-
+       
         public async Task<ReturnResponse<UserProfileResponse>> GetUserProfileAsync(string userId)
         {
             try
@@ -178,17 +149,63 @@ namespace SoundMatchAPI.Services
                         Errors = new List<string> { "No user found." }
                     };
                 }
-
-                var musicProfile = await musicProfileService.GetProfileAsync(user.FavoriteSongIds, user.FavoriteArtistIds, user.FavoriteGenreIds); // Get current music profile
-                user.FavoriteSongs = musicProfile.Songs.ToList();
-                user.FavoriteArtists = musicProfile.Artists.ToList();
-                user.FavoriteGenres = musicProfile.Genres.ToList();
-
+                if (user.IsConnectedToSpotify)
+                {
+                    var musicProfile = await musicService.GetProfileAsync(user.FavoriteSongIds, user.FavoriteArtistIds, user.FavoriteGenreIds); // Get current music profile
+                    user.FavoriteSongs = musicProfile.Songs.ToList();
+                    user.FavoriteArtists = musicProfile.Artists.ToList();
+                    user.FavoriteGenres = musicProfile.Genres.ToList();
+                }
                 var userProfileResponse = mapper.Map<UserProfileResponse>(user);
                 return new ReturnResponse<UserProfileResponse>
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Data = userProfileResponse
+                    Data = userProfileResponse,
+                    Message = "User profile fetched successfully."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ReturnResponse<UserProfileResponse>
+                {
+                    Message = "An unexpected error occurred.",
+                    Errors = new List<string> { $"Error: {ex.Message}" },
+                    StatusCode = HttpStatusCode.InternalServerError
+                };
+            }
+        }
+
+        public async Task<ReturnResponse<UserProfileResponse>> UpdateUserBioAsync(string userId, string bio, string loggedInUserId)
+        {
+            try
+            {
+                if (userId != loggedInUserId)
+                {
+                    return new ReturnResponse<UserProfileResponse>
+                    {
+                        Message = "An error has occurred while updating user bio.",
+                        Errors = new List<string> { "User is not authorized to update this resource." },
+                        StatusCode = HttpStatusCode.Forbidden
+                    };
+                }
+                var user = await userRepository.GetUserWithFavoriteMusic(userId);
+                if (user == null)
+                {
+                    return new ReturnResponse<UserProfileResponse>
+                    {
+                        StatusCode = HttpStatusCode.NotFound,
+                        Message = "User not found",
+                        Errors = new List<string> { "No user found." }
+                    };
+                }
+                user.Biography = bio;
+                await userRepository.UpdateAsync(user);
+                var userProfileResponse = mapper.Map<UserProfileResponse>(user);
+                return new ReturnResponse<UserProfileResponse>
+                {
+                    StatusCode = HttpStatusCode.NoContent,
+                    Data = userProfileResponse,
+                    Message = "User bio updated successfully."
                 };
             }
             catch (Exception ex)

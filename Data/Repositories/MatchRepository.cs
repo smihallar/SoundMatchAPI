@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
 using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data.Repositories
@@ -34,16 +34,16 @@ namespace SoundMatchAPI.Data.Repositories
         }
         public async Task<Match?> GetMatchWithDetailsByIdAsync(string matchId)
         {
-             return await ctx.Matches
-                .Include(m => m.InitiatorUser)
-                .Include(m => m.RecipientUser)
-                .Include(m => m.MutualSongs)
-                    .ThenInclude(s => s.Artists)
-                        .ThenInclude(a => a.Genres)
-                .Include(m => m.MutualArtists)
-                    .ThenInclude(a => a.Genres)
-                .Include(m => m.MutualGenres)
-            .FirstOrDefaultAsync(m => m.MatchId == matchId);
+            return await ctx.Matches
+               .Include(m => m.InitiatorUser)
+               .Include(m => m.RecipientUser)
+               .Include(m => m.MutualSongs)
+                   .ThenInclude(s => s.Artists)
+                       .ThenInclude(a => a.Genres)
+               .Include(m => m.MutualArtists)
+                   .ThenInclude(a => a.Genres)
+               .Include(m => m.MutualGenres)
+           .FirstOrDefaultAsync(m => m.MatchId == matchId);
         }
 
         public async Task DeleteMatchesByUserIdAsync(string userId)
@@ -53,6 +53,20 @@ namespace SoundMatchAPI.Data.Repositories
                 .ToListAsync();
             ctx.Matches.RemoveRange(matches);
             await ctx.SaveChangesAsync();
+        }
+
+        // Check for existing match between two users
+        public async Task<Match?> GetExistingMatchAsync(string initiatorId, string recipientId)
+        {
+            return await ctx.Matches
+                .Include(m => m.MutualSongs)
+                .Include(m => m.MutualArtists)
+                .Include(m => m.MutualGenres)
+            .FirstOrDefaultAsync(m =>
+                m.InitiatorUserId == initiatorId &&
+                m.RecipientUserId == recipientId
+            );
+
         }
     }
 }

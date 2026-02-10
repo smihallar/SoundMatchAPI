@@ -1,17 +1,20 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using SoundMatchAPI.Data;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using SoundMatchAPI.Data.Repositories;
 using SoundMatchAPI.Data.SyntheticData;
+using SoundMatchAPI.Hubs;
 using SoundMatchAPI.Services;
 using System;
-using System.Threading.Tasks;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SoundMatchAPI
 {
@@ -23,9 +26,9 @@ namespace SoundMatchAPI
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", policy =>
+                options.AddPolicy("AllowLocalhostClient", policy =>
                 {
-                    policy.AllowAnyOrigin() // Update to client port
+                    policy.WithOrigins("https://localhost:7243") // Blazor-client port
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
@@ -36,8 +39,6 @@ namespace SoundMatchAPI
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -55,8 +56,14 @@ namespace SoundMatchAPI
             // Services
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IMatchService, MatchService>();
-            builder.Services.AddScoped<IMusicProfileService, MusicProfileService>();
+            builder.Services.AddScoped<IMusicService, MusicService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<ISpotifyAuthService, SpotifyAuthService>();
+            builder.Services.AddScoped<ISpotifyDataService, SpotifyDataService>();
+
+            builder.Services.AddSwaggerGen();
+            builder.Services.AddHttpClient();
+
 
             builder.Services.AddAuthentication(options =>
             {
@@ -79,7 +86,7 @@ namespace SoundMatchAPI
 
             var app = builder.Build();
 
-            app.UseCors("AllowAll");
+            app.UseCors("AllowLocalhostClient");
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -96,12 +103,12 @@ namespace SoundMatchAPI
             }
             app.UseHttpsRedirection();
 
-            app.UseCors("AllowAll");
-
-            app.UseAuthorization();
             app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllers();
+
+            //app.MapHub<ChatHub>("/chathub");
 
             app.Run();
         }

@@ -9,8 +9,8 @@ namespace SoundMatchAPI.Data.DTOs.Responses
         public required string RecipientUserId { get; set; } // User who is being matched with the initiator.
         public int CompatibilityScore { get; set; } // Score representing compatibility between users
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public List<string> MutualSongIds { get; set; } = new List<string>();
-        public List<string> MutualArtistIds { get; set; } = new List<string>();
-        public List<string> MutualGenreIds { get; set; } = new List<string>();
+        public List<Song> MutualSongs { get; set; } = new List<Song>();
+        public List<Artist> MutualArtists { get; set; } = new List<Artist>();
+        public List<Genre> MutualGenres { get; set; } = new List<Genre>();
     }
 }

@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using SoundMatchAPI.Data.AuthModels;
 using SoundMatchAPI.Data.DTOs.Requests;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.DTOs.Responses;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Services;
+using System.Net;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SoundMatchAPI.Controllers
 {
@@ -19,61 +22,58 @@ namespace SoundMatchAPI.Controllers
             this.authService = authService;
         }
 
-       //POST: api/Auth/register
-       [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserRegisterRequest request)
+        //POST: api/Auth/register
+        [HttpPost("register")]
+        public async Task<ActionResult<ReturnResponse>> Register([FromBody] UserRegisterRequest request)
         {
-            if (ModelState.IsValid == false)
+            if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
-            }
-            var result = await authService.RegisterUserAsync(request);
-
-            if (!result.Succeeded)
-            {
-                if (result.Errors != null)
+                return new ReturnResponse
                 {
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError("", error);
-                    }
-                }
-                return BadRequest(ModelState);
+                    StatusCode = HttpStatusCode.BadRequest,
+                    Message = "Invalid request.",
+                    Errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList()
+                };
             }
+            var returnResponse = await authService.RegisterUserAsync(request);
 
-            return Accepted();
+            return new ReturnResponse<AuthResponse>
+            {
+                StatusCode = returnResponse.StatusCode,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>(),
+            };
         }
 
         //POST: api/Auth/login
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
+        public async Task<ActionResult<ReturnResponse<AuthResponse>>> Login([FromBody] UserLoginRequest request)
         {
-            if (ModelState.IsValid == false)
+            if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
-            }
-            var result = await authService.LoginUserAsync(request);
-
-            if (!result.Succeeded)
-            {
-                if (result.Errors != null)
+                return new ReturnResponse<AuthResponse>
                 {
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError("", error);
-                    }
-                }
-                return BadRequest(ModelState);
+                    StatusCode = HttpStatusCode.BadRequest,
+                    Message = "Invalid request.",
+                    Errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList(),
+                    Data = null
+                };
             }
+            var returnResponse = await authService.LoginUserAsync(request);
 
-            var response = new AuthResponse
+            return new ReturnResponse<AuthResponse>
             {
-                UserId = result.UserId,
-                Email = request.Email,
-                Token = result.Token
+                StatusCode = returnResponse.StatusCode,
+                Message = returnResponse.Message,
+                Errors = returnResponse.Errors ?? new List<string>(),
+                Data = returnResponse.Data ?? null
             };
-
-            return Ok(response);
         }
     }
 }

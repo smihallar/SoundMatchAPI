@@ -3,11 +3,13 @@ using Microsoft.IdentityModel.Tokens;
 using SoundMatchAPI.Constants;
 using SoundMatchAPI.Data.AuthModels;
 using SoundMatchAPI.Data.DTOs.Requests;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.DTOs.Responses;
+using SoundMatchAPI.Data.Interfaces.ServiceInterfaces;
 using SoundMatchAPI.Data.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using static System.Net.WebRequestMethods;
 
 namespace SoundMatchAPI.Services
 {
@@ -22,81 +24,92 @@ namespace SoundMatchAPI.Services
             this.configuration = configuration;
         }
 
-        public async Task<AuthResult> RegisterUserAsync(UserRegisterRequest request)
+        public async Task<ReturnResponse> RegisterUserAsync(UserRegisterRequest request)
         {
             try
             {
                 var existingUser = await userManager.FindByEmailAsync(request.Email);
                 if (existingUser != null)
                 {
-                    return new AuthResult
+                    return new ReturnResponse
                     {
-                        Succeeded = false,
+                        StatusCode = System.Net.HttpStatusCode.BadRequest,
+                        Message = "User registration failed.",
                         Errors = new List<string> { "User with this email already exists." }
                     };
                 }
                 var newUser = new User
                 {
+                    ProfilePictureUrl = "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
                     Email = request.Email,
                     UserName = request.Email // When not connected to Spotify, username is the email
                 };
                 var createUserResult = await userManager.CreateAsync(newUser, request.Password);
                 if (!createUserResult.Succeeded)
                 {
-                    return new AuthResult
+                    return new ReturnResponse
                     {
-                        Succeeded = false,
-                        Errors = createUserResult.Errors.Select(e => e.Description).ToList()
+                        StatusCode = System.Net.HttpStatusCode.BadRequest,
+                        Errors = createUserResult.Errors.Select(e => e.Description).ToList(),
+                        Message = "User registration failed."
                     };
                 }
                 await userManager.AddToRoleAsync(newUser, ApiRoles.User);
-                return new AuthResult
+                return new ReturnResponse
                 {
-                    Succeeded = true,
-                    UserId = newUser.Id,
-                    Errors = null
+                    StatusCode = System.Net.HttpStatusCode.OK,
+                    Message = "User registered successfully."
                 };
             }
             catch (Exception ex)
             {
-                return new AuthResult
+                return new ReturnResponse
                 {
-                    Succeeded = false,
+                    StatusCode = System.Net.HttpStatusCode.InternalServerError,
                     Errors = new List<string> { ex.Message }
                 };
             }
         }
-        public async Task<AuthResult> LoginUserAsync(UserLoginRequest request)
+        public async Task<ReturnResponse<AuthResponse>> LoginUserAsync(UserLoginRequest request)
         {
             try
             {
                 var user = await userManager.FindByEmailAsync(request.Email);
+                bool userIsNull = user == null;
                 var passwordValid = await userManager.CheckPasswordAsync(user, request.Password);
-                if (user == null || passwordValid == false)
+                if (userIsNull || passwordValid == false)
                 {
-                    return new AuthResult
+                    return new ReturnResponse<AuthResponse>
                     {
-                        Succeeded = false,
-                        Errors = new List<string> { "Wrong email or password." },
+                        Data = null,
+                        StatusCode = System.Net.HttpStatusCode.BadRequest,
+                        Errors = new List<string> { "Wrong email or password.", "If you do not already have an account, please register." },
+                        Message = "Authentication failed."
                     };
                 }
 
                 string tokenString = await GenerateToken(user);
 
-                return new AuthResult
+                return new ReturnResponse<AuthResponse>
                 {
-                    Succeeded = true,
-                    Errors = null,
-                    Token = tokenString,
-                    UserId = user.Id,
+                    Data = new AuthResponse
+                    {
+                        Token = tokenString,
+                        UserId = user.Id,
+                        Email = user.Email
+                    },
+                    StatusCode = System.Net.HttpStatusCode.OK,
+                    Message = "Authentication successful."
                 };
             }
-            catch
+            catch (Exception ex)
             {
-                return new AuthResult
+                return new ReturnResponse<AuthResponse>
                 {
-                    Succeeded = false,
-                    Errors = new List<string> { "An error occurred during login." },
+                    Data = null,
+                    StatusCode = System.Net.HttpStatusCode.InternalServerError,
+                    Errors = new List<string> { ex.Message },
+                    Message = "Something went wrong. Authentication failed."
                 };
             }
         }

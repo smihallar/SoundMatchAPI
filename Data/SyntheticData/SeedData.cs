@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿ using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using SoundMatchAPI.Constants;
 using SoundMatchAPI.Data.Models;
 using System.Text.Json;
-using System.Reflection.Emit;
 
 namespace SoundMatchAPI.Data.SyntheticData
 {
@@ -10,176 +10,151 @@ namespace SoundMatchAPI.Data.SyntheticData
     {
         public static async Task Initialize(ApplicationDbContext ctx)
         {
+            // Ensure Roles exist
             if (!ctx.Roles.Any())
             {
-                var roles = new List<IdentityRole>
+                ctx.Roles.Add(new IdentityRole
                 {
-                    new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "User", NormalizedName = ApiRoles.User },
-                };
-                ctx.Roles.AddRange(roles);
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "User",
+                    NormalizedName = ApiRoles.User
+                });
                 await ctx.SaveChangesAsync();
             }
 
-            // Seed synthetic users from JSON
-            if (!ctx.Users.Any(u => u.IsSynthetic))
+            // Do not seed again if synthetic users already exist
+            if (ctx.Users.Any(u => u.IsSynthetic))
+                return;
+
+            var hasher = new PasswordHasher<User>();
+
+            var json = await File.ReadAllTextAsync("Data/SyntheticData/spotify_seed_data.json");
+            var seedData = JsonDocument.Parse(json);
+
+            // Load Artists first
+            var artistLookup = new Dictionary<string, Artist>();
+            var genreLookup = new Dictionary<string, Genre>(StringComparer.OrdinalIgnoreCase);
+
+            var artistsJson = seedData.RootElement.GetProperty("Artists");
+            foreach (var artistJson in artistsJson.EnumerateArray())
             {
-                var hasher = new PasswordHasher<User>();
-                var json = await File.ReadAllTextAsync("Data/SyntheticData/spotify_seed_data.json"); // JSON file with spotify data of artists, songs and genres
-                var seedData = JsonDocument.Parse(json);
+                var spotifyId = artistJson.GetProperty("id").GetString()!;
+                var name = artistJson.GetProperty("name").GetString()!;
 
-                // Example: create synthetic users with favorite artists
-                var artists = seedData.RootElement.GetProperty("Artists");
-                var artistList = new List<Artist>();
-                foreach (var artistJson in artists.EnumerateArray())
+                var artist = new Artist
                 {
-                    var artist = new Artist
-                    {
-                        ArtistId = artistJson.GetProperty("ArtistId").GetString()!,
-                        Name = artistJson.GetProperty("name").GetString()!,
-                        SpotifyId = artistJson.GetProperty("id").GetString()!,
-                        Popularity = artistJson.GetProperty("popularity").GetInt32(),
-                        ArtistImageUrl = artistJson.GetProperty("ArtistImageUrl").GetString()!,
-                        Genres = artistJson.TryGetProperty("Genres", out var genresJson)
-                            ? genresJson.EnumerateArray().Select(g => new Genre
-                            {
-                                GenreId = g.GetProperty("GenreId").GetString()!,
-                                Name = g.GetProperty("Name").GetString()!
-                            }).ToList()
-                            : new List<Genre>()
-                    };
-                    artistList.Add(artist);
-                }
+                    ArtistId = Guid.NewGuid().ToString(),
+                    Name = name,
+                    SpotifyId = spotifyId,
+                    Popularity = artistJson.GetProperty("popularity").GetInt32(),
+                    ArtistImageUrl = artistJson.GetProperty("ArtistImageUrl").GetString()!,
+                    Genres = new List<Genre>()
+                };
 
-                // Add artists and genres to context if not present
-                foreach (var artist in artistList)
+                // Load Genres & De-duplicate
+                if (artistJson.TryGetProperty("Genres", out var genresJson))
                 {
-                    if (!ctx.Artists.Any(a => a.SpotifyId == artist.SpotifyId))
-                        ctx.Artists.Add(artist);
-
-                    foreach (var genre in artist.Genres)
+                    foreach (var g in genresJson.EnumerateArray())
                     {
-                        if (!ctx.Genres.Any(g => g.GenreId == genre.GenreId))
-                            ctx.Genres.Add(genre);
-                    }
-                }
-                await ctx.SaveChangesAsync();
-
-                // Parse songs
-                var songs = new List<Song>();
-                if (seedData.RootElement.TryGetProperty("Songs", out var songsJson))
-                {
-                    foreach (var songJson in songsJson.EnumerateArray())
-                    {
-                        var song = new Song
+                        var genreName = g.GetProperty("Name").GetString()!;
+                        if (!genreLookup.TryGetValue(genreName, out var existingGenre))
                         {
-                            SongId = songJson.GetProperty("SongId").GetGuid().ToString(),
-                            Title = songJson.GetProperty("Title").GetString() ?? "",
-                            AlbumImageUrl = songJson.GetProperty("AlbumImageUrl").GetString() ?? "",
-                            Popularity = songJson.GetProperty("Popularity").GetInt32(),
-                            SpotifyId = songJson.GetProperty("SpotifyId").GetString() ?? "",
-                            Artists = songJson.TryGetProperty("Artists", out var songArtistsJson)
-                            ? songArtistsJson.EnumerateArray()
-                                .Select(a =>
-                                {
-                                    var artistId = a.GetProperty("ArtistId").GetString();
-                                    var artist = artistList.FirstOrDefault(x => x.ArtistId == artistId);
-                                    if (artist == null)
-                                    {
-                                        // Create new artist if not found
-                                        artist = new Artist
-                                        {
-                                            ArtistId = artistId,
-                                            Name = a.GetProperty("name").GetString() ?? "",
-                                            SpotifyId = a.GetProperty("id").GetString() ?? "",
-                                            Popularity = a.GetProperty("popularity").GetInt32(),
-                                            ArtistImageUrl = a.GetProperty("ArtistImageUrl").GetString() ?? "",
-                                            Genres = a.TryGetProperty("Genres", out var genresJson)
-                                                ? genresJson.EnumerateArray().Select(g => new Genre
-                                                {
-                                                    GenreId = g.GetProperty("GenreId").GetString() ?? "",
-                                                    Name = g.GetProperty("Name").GetString() ?? ""
-                                                }).ToList()
-                                                : new List<Genre>()
-                                        };
-                                        artistList.Add(artist);
-                                        ctx.Artists.Add(artist);
-                                    }
-                                    return artist;
-                                })
-                                .Where(a => a != null)
-                                .ToList()!
-                            : new List<Artist>()
-                        };
-                        songs.Add(song);
+                            existingGenre = new Genre
+                            {
+                                GenreId = Guid.NewGuid().ToString(),
+                                Name = genreName
+                            };
+                            genreLookup[genreName] = existingGenre;
+                        }
+                        artist.Genres.Add(existingGenre);
                     }
                 }
 
-                // Add songs to context if not present
-                foreach (var song in songs)
-                {
-                    if (!ctx.Songs.Any(s => s.SpotifyId == song.SpotifyId))
-                        ctx.Songs.Add(song);
-                }
-                await ctx.SaveChangesAsync();
-
-                // Create synthetic users
-                for (int i = 0; i < 150; i++)
-                {
-                    // Select favorite artists, genres, and songs
-                    var favoriteArtists = artistList.OrderBy(_ => Guid.NewGuid()).Take(25).ToList();
-                    var favoriteGenres = artistList
-                        .SelectMany(a => a.Genres)
-                        .Distinct()
-                        .OrderBy(_ => Guid.NewGuid())
-                        .Take(10)
-                        .ToList();
-                    var favoriteSongs = songs.OrderBy(_ => Guid.NewGuid()).Take(60).ToList();
-
-                    var user = new User
-                    {
-                        UserName = $"synthetic_user_{i}",
-                        NormalizedUserName = $"SYNTHETIC_USER_{i}",
-                        Email = $"synthetic_user_{i}@example.com",
-                        NormalizedEmail = $"SYNTHETIC_USER_{i}@EXAMPLE.COM",
-                        CountryCode = "SE",
-                        IsSynthetic = true,
-                        ProfilePictureUrl = "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
-                        FavoriteArtistIds = favoriteArtists.Select(a => a.ArtistId).ToList(),
-                        FavoriteGenreIds = favoriteGenres.Select(g => g.GenreId).ToList(),
-                        FavoriteSongIds = favoriteSongs.Select(s => s.SongId).ToList(),
-                        FavoriteArtists = favoriteArtists,
-                        FavoriteGenres = favoriteGenres,
-                        FavoriteSongs = favoriteSongs,
-                        IsConnectedToSpotify = true
-                    };
-                    user.PasswordHash = hasher.HashPassword(user, "Synthetic123!");
-                    ctx.Users.Add(user);
-                }
-                await ctx.SaveChangesAsync();
-
-                // Ensure some users have overlapping favorites for matching
-                var usersToMatch = ctx.Users
-                    .OrderBy(u => u.UserName)
-                    .Take(3)
-                    .ToList();
-
-                // Shared favorites (e.g., from existing songs/artists/genres)
-                var sharedSongIds = ctx.Songs.Take(5).Select(s => s.SongId).ToList();
-                var sharedArtistIds = ctx.Artists.Take(2).Select(a => a.ArtistId).ToList();
-                var sharedGenreIds = ctx.Genres.Take(2).Select(g => g.GenreId).ToList();
-
-                // Assign the shared favorites to these users
-                foreach (var user in usersToMatch)
-                {
-                    user.FavoriteSongIds.AddRange(sharedSongIds);
-                    user.FavoriteArtistIds.AddRange(sharedArtistIds);
-                    user.FavoriteGenreIds.AddRange(sharedGenreIds);
-                    user.FavoriteSongs.AddRange(ctx.Songs.Where(s => sharedSongIds.Contains(s.SongId)).ToList());
-                    user.FavoriteArtists.AddRange(ctx.Artists.Where(a => sharedArtistIds.Contains(a.ArtistId)).ToList());
-                    user.FavoriteGenres.AddRange(ctx.Genres.Where(g => sharedGenreIds.Contains(g.GenreId)).ToList());
-                }
-                await ctx.SaveChangesAsync();
+                artistLookup[spotifyId] = artist;
             }
+
+            ctx.Genres.AddRange(genreLookup.Values);
+            ctx.Artists.AddRange(artistLookup.Values);
+            await ctx.SaveChangesAsync();
+
+            // Load Songs and connect existing artists
+            var songs = new List<Song>();
+            var songLookup = new HashSet<string>();
+
+            if (seedData.RootElement.TryGetProperty("Songs", out var songsJson))
+            {
+                foreach (var songJson in songsJson.EnumerateArray())
+                {
+                    var spotifyId = songJson.GetProperty("SpotifyId").GetString()!;
+
+                    if (songLookup.Contains(spotifyId))
+                        continue;
+
+                    var song = new Song
+                    {
+                        SongId = Guid.NewGuid().ToString(),
+                        Title = songJson.GetProperty("Title").GetString()!,
+                        AlbumImageUrl = songJson.GetProperty("AlbumImageUrl").GetString()!,
+                        Popularity = songJson.GetProperty("Popularity").GetInt32(),
+                        SpotifyId = spotifyId,
+                        Artists = new List<Artist>()
+                    };
+
+                    if (songJson.TryGetProperty("Artists", out var songArtistsJson))
+                    {
+                        foreach (var a in songArtistsJson.EnumerateArray())
+                        {
+                            var artistSpotifyId = a.GetProperty("id").GetString()!;
+                            if (artistLookup.TryGetValue(artistSpotifyId, out var artist))
+                            {
+                                song.Artists.Add(artist);
+                            }
+                        }
+                    }
+
+                    songLookup.Add(spotifyId);
+                    songs.Add(song);
+                }
+            }
+
+            ctx.Songs.AddRange(songs);
+            await ctx.SaveChangesAsync();
+
+            // Create Synthetic Users
+            var allArtists = artistLookup.Values.ToList();
+            var allGenres = genreLookup.Values.ToList();
+
+            for (int i = 0; i < 50; i++)
+            {
+                var favoriteArtists = allArtists.OrderBy(_ => Guid.NewGuid()).Take(30).ToList();
+                var favoriteGenres = allGenres.OrderBy(_ => Guid.NewGuid()).Take(10).ToList();
+                var favoriteSongs = songs.OrderBy(_ => Guid.NewGuid()).Take(50).ToList();
+
+                var user = new User
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    UserName = $"synthetic_user_{i}",
+                    NormalizedUserName = $"SYNTHETIC_USER_{i}",
+                    Email = $"synthetic_user_{i}@example.com",
+                    NormalizedEmail = $"SYNTHETIC_USER_{i}@EXAMPLE.COM",
+                    CountryCode = "SE",
+                    IsSynthetic = true,
+                    IsConnectedToSpotify = true,
+                    ProfilePictureUrl = "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
+                    FavoriteArtists = favoriteArtists,
+                    FavoriteArtistIds = favoriteArtists.Select(a => a.ArtistId).ToList(),
+                    FavoriteGenres = favoriteGenres,
+                    FavoriteGenreIds = favoriteGenres.Select(g => g.GenreId).ToList(),
+                    FavoriteSongs = favoriteSongs,
+                    FavoriteSongIds = favoriteSongs.Select(s => s.SongId).ToList(),
+                    MusicTasteLastRefreshed = DateTime.UtcNow
+                };
+
+                user.PasswordHash = hasher.HashPassword(user, "Synthetic123!");
+                ctx.Users.Add(user);
+            }
+
+            await ctx.SaveChangesAsync();
         }
     }
 }

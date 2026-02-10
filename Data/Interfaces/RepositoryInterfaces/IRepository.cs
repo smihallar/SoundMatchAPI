@@ -1,4 +1,4 @@
-﻿namespace SoundMatchAPI.Data.Interfaces
+﻿namespace SoundMatchAPI.Data.Interfaces.RepositoryInterfaces
 {
     public interface IRepository<T> // Used for generic repository pattern
     {

@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoundMatchAPI.Data.Interfaces;
+using SoundMatchAPI.Data.Interfaces.RepositoryInterfaces;
 using SoundMatchAPI.Data.Models;
 
 namespace SoundMatchAPI.Data.Repositories
@@ -25,6 +25,13 @@ namespace SoundMatchAPI.Data.Repositories
                 .Where(a => artistIds.Contains(a.ArtistId))
                 .Include(a => a.Genres)
                 .ToListAsync();
+        }
+
+        public async Task<Artist?> GetBySpotifyIdAsync(string spotifyId)
+        {
+            return await ctx.Artists
+                .Include(a => a.Genres)
+                .FirstOrDefaultAsync(a => a.SpotifyId == spotifyId);
         }
     }
 }
