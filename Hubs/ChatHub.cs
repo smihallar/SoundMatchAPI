@@ -14,7 +14,6 @@ namespace SoundMatchAPI.Hubs
         public async Task SendMessage(string chatId, string senderId, string messageContent)
         {
             await chatService.AddMessageAsync(chatId, senderId, messageContent);
-            // Broadcast to all clients in this chat group
             await Clients.Group(chatId).SendAsync("ReceiveMessage", senderId, messageContent, DateTime.UtcNow);
         }
     }

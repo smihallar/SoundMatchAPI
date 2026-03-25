@@ -58,7 +58,7 @@ namespace SoundMatchAPI.Services
                 }
             }
 
-            // 3Upsert artists
+            // Upsert artists
             foreach (var artist in profile.Artists)
             {
                 var existingArtist = await artistRepository.GetBySpotifyIdAsync(artist.SpotifyId);
