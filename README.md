@@ -2,24 +2,24 @@
 
 A .NET 8 Web API that connects music lovers based on their Spotify listening habits. Users are matched with others who share similar musical tastes, with compatibility scores calculated based on mutual songs, artists, and genres.
 
-## ?? Features
+## Features
 
-- **Spotify Integration** – Connect your Spotify account to import your top songs, artists, and genres
-- **Music-Based Matching** – Find users with similar music taste using a weighted compatibility algorithm
-- **JWT Authentication** – Secure API endpoints with token-based authentication
-- **User Profiles** – View and manage user profiles with music preferences and bio
-- **Real-time Chat** *(Coming Soon)* – Chat with your matches
+- **Spotify Integration** â€“ Connect your Spotify account to import your top songs, artists, and genres
+- **Music-Based Matching** â€“ Find users with similar music taste using a weighted compatibility algorithm
+- **JWT Authentication** â€“ Secure API endpoints with token-based authentication
+- **User Profiles** â€“ View and manage user profiles with music preferences and bio
+- **Real-time Chat** *(Coming Soon)* â€“ Chat with your matches
 
-## ??? Tech Stack
+## Tech Stack
 
-- **.NET 8** – ASP.NET Core Web API
-- **Entity Framework Core** – SQL Server database with Code-First migrations
-- **ASP.NET Identity** – User authentication and management
-- **AutoMapper** – Object-to-object mapping
-- **Swagger/OpenAPI** – API documentation
-- **Spotify Web API** – Music data integration
+- **.NET 8** â€“ ASP.NET Core Web API
+- **Entity Framework Core** â€“ SQL Server database with Code-First migrations
+- **ASP.NET Identity** â€“ User authentication and management
+- **AutoMapper** â€“ Object-to-object mapping
+- **Swagger/OpenAPI** â€“ API documentation
+- **Spotify Web API** â€“ Music data integration
 
-## ?? Prerequisites
+## Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [SQL Server](https://www.microsoft.com/sql-server)
@@ -33,7 +33,7 @@ A .NET 8 Web API that connects music lovers based on their Spotify listening hab
   - Microsoft.AspNetCore.Authentication.JwtBearer
   - Microsoft.EntityFrameworkCore.Tools
 
-## ?? Configuration
+## Configuration
 
 ### 1. App Settings
 
@@ -43,7 +43,7 @@ Configure `appsettings.json` with JWT settings and store sensitive credentials i
 
 Store sensitive credentials with User secrets (https://learn.microsoft.com/aspnet/core/security/app-secrets).
 
-## ?? Getting Started
+## Getting Started
 
 1. **Clone the repository**
 
@@ -58,7 +58,7 @@ Connection string, Spotify API credentials, and JWT secret key.
 5. **Run the Application**
 
 
-## ????? API Endpoints
+## API Endpoints
 
 **AUTH**
 
@@ -126,7 +126,7 @@ PUT
 GET
 /api/User/profile/{userId}
 
-## ?? Matching Algorithm
+## Matching Algorithm
 
 Compatibility scores are calculated based on shared music preferences:
 
@@ -135,3 +135,6 @@ Mutual Artists: 2p each
 Mutual Genres: 1p each
 
 + Popularity bonus (less popular items score higher)
+
+
+<img width="1474" height="1142" alt="image" src="https://github.com/user-attachments/assets/b6b7bcee-8c6c-455c-bee0-c189c5cbc005" />
