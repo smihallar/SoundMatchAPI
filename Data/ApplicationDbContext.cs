@@ -86,7 +86,6 @@ namespace SoundMatchAPI.Data
                 .HasForeignKey(m => m.SenderId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Optional: if you want a chat linked to a match
             modelBuilder.Entity<Chat>()
                 .HasOne<Match>()
                 .WithOne()

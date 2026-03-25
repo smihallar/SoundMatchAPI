@@ -10,7 +10,7 @@ namespace SoundMatchAPI.Data.SyntheticData
     {
         public static async Task Initialize(ApplicationDbContext ctx)
         {
-            // Ensure Roles exist
+            // Ensure roles exist
             if (!ctx.Roles.Any())
             {
                 ctx.Roles.Add(new IdentityRole
@@ -31,7 +31,7 @@ namespace SoundMatchAPI.Data.SyntheticData
             var json = await File.ReadAllTextAsync("Data/SyntheticData/spotify_seed_data.json");
             var seedData = JsonDocument.Parse(json);
 
-            // Load Artists first
+            // Load artists first
             var artistLookup = new Dictionary<string, Artist>();
             var genreLookup = new Dictionary<string, Genre>(StringComparer.OrdinalIgnoreCase);
 
@@ -51,7 +51,7 @@ namespace SoundMatchAPI.Data.SyntheticData
                     Genres = new List<Genre>()
                 };
 
-                // Load Genres & De-duplicate
+                // Load genres & de-duplicate
                 if (artistJson.TryGetProperty("Genres", out var genresJson))
                 {
                     foreach (var g in genresJson.EnumerateArray())
@@ -77,7 +77,7 @@ namespace SoundMatchAPI.Data.SyntheticData
             ctx.Artists.AddRange(artistLookup.Values);
             await ctx.SaveChangesAsync();
 
-            // Load Songs and connect existing artists
+            // Load songs and connect existing artists
             var songs = new List<Song>();
             var songLookup = new HashSet<string>();
 
@@ -120,7 +120,7 @@ namespace SoundMatchAPI.Data.SyntheticData
             ctx.Songs.AddRange(songs);
             await ctx.SaveChangesAsync();
 
-            // Create Synthetic Users
+            // Create synthetic users
             var allArtists = artistLookup.Values.ToList();
             var allGenres = genreLookup.Values.ToList();
 

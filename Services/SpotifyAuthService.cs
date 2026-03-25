@@ -39,7 +39,7 @@ namespace SoundMatchAPI.Services
                 var clientSecret = config["Spotify:ClientSecret"];
                 var redirectUri = config["Spotify:RedirectUri"];
 
-                // 1️⃣ Prepare the POST request to Spotify
+                // Prepare the POST request to Spotify
                 var request = new HttpRequestMessage(HttpMethod.Post, "https://accounts.spotify.com/api/token")
                 {
                     Content = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -52,7 +52,7 @@ namespace SoundMatchAPI.Services
                     })
                 };
 
-                // 2️⃣ Send the request
+                // Send the request
                 var response = await httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 
@@ -64,10 +64,10 @@ namespace SoundMatchAPI.Services
                 }) ?? throw new Exception("Failed to deserialize Spotify token response");
 
 
-                // 4️⃣ Store tokens and update user
+                // Store tokens and update user
                 await userRepository.UpdateUserWithSpotifyAuthDetailsAsync(user.Id, token.RefreshToken!, DateTime.UtcNow.AddSeconds(token.ExpiresIn));
 
-                // 5️⃣ Return the access token in a standardized response
+                // Return the access token in a standardized response
                 return new ReturnResponse<SpotifyTokenResponse>
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -141,7 +141,6 @@ namespace SoundMatchAPI.Services
                 var scopes = Uri.EscapeDataString(config["Spotify:Scopes"] ?? string.Empty);
                 var state = userId; // user id to keep track of logged in user sending the request
 
-                // Force Spotify to show the login/authorization dialog
                 var showDialog = "true";
 
                 var url = $"https://accounts.spotify.com/authorize?response_type=code" +
@@ -151,7 +150,7 @@ namespace SoundMatchAPI.Services
                           $"&state={state}" +
                           $"&show_dialog={showDialog}";
 
-                // Add an artificial await to avoid CS1998
+                // Delay to avoid issues from Spotify with too many requests in a short time
                 await Task.CompletedTask;
 
                 return new ReturnResponse<SpotifyAuthorizationUrlResponse>
